@@ -1,0 +1,3868 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Picon Studio</title>
+<style>
+:root {
+  --bg:      #0d0f18;
+  --s1:      #141721;
+  --s2:      #1c2035;
+  --s3:      #242844;
+  --border:  #2a2f50;
+  --accent:  #5b8def;
+  --accent2: #8b5cf6;
+  --green:   #34d399;
+  --orange:  #f59e0b;
+  --red:     #f87171;
+  --text:    #e2e8f0;
+  --muted:   #64748b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── Header ── */
+header {
+  background: var(--s1); border-bottom: 1px solid var(--border);
+  padding: 0 20px; height: 48px;
+  display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+}
+header h1 { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
+.tabs { display: flex; gap: 2px; margin-left: 8px; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.tab-settings {
+  padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--border); background: transparent;
+  color: var(--muted); transition: all .15s;
+}
+.tab-settings.active { border-color: var(--accent); color: var(--accent); background: var(--s2); }
+.tab-settings:hover:not(.active) { background: var(--s2); color: var(--text); border-color: var(--muted); }
+.tab {
+  padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; background: transparent; color: var(--muted);
+  transition: all .15s;
+}
+.tab.active { background: var(--accent); color: #fff; }
+.tab:hover:not(.active) { background: var(--s2); color: var(--text); }
+.version { font-size: 11px; color: var(--muted); }
+
+/* ── Main ── */
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Panel ── */
+.panel {
+  background: var(--s1); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.panel-title {
+  padding: 10px 14px 6px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted);
+  flex-shrink: 0;
+}
+.panel-scroll { overflow-y: auto; flex: 1; padding: 0 10px 12px; }
+
+/* ── Galerie ── */
+#viewGallery { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Sidebar ── */
+.gallery-sidebar {
+  width: 220px; display: flex; flex-direction: column;
+  background: var(--s1); border-right: 1px solid var(--border);
+  overflow: hidden; flex-shrink: 0;
+}
+.sidebar-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 0 0; min-height: 0; }
+.sidebar-footer {
+  flex-shrink: 0; border-top: 1px solid var(--border);
+  padding: 6px 10px; background: var(--s1);
+}
+
+/* sekce label */
+.src-section {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+  color: var(--muted); text-transform: uppercase;
+  padding: 10px 14px 4px; display: block;
+}
+
+/* řádek zdroje */
+.source-btn {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; text-align: left;
+  background: transparent; border: none; border-left: 2px solid transparent;
+  color: var(--text); padding: 7px 10px 7px 12px;
+  cursor: pointer; font-size: 12px;
+  transition: background .12s;
+}
+.source-btn:hover  { background: var(--s2); }
+.source-btn.active { background: var(--s3); border-left-color: var(--accent); padding-left: 10px; }
+
+.source-btn .src-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* refresh ↻ tlačítko vedle zdroje */
+.src-refresh-btn {
+  flex-shrink: 0; width: 28px; padding: 0;
+  border: none; background: transparent;
+  color: var(--muted); cursor: pointer; font-size: 14px;
+  transition: color .15s; line-height: 32px; text-align: center;
+}
+.src-refresh-btn:hover { color: var(--accent); }
+
+/* progress bar – uvnitř sidebar-scroll, nikdy nepřeteče */
+.gh-prefetch-wrap {
+  padding: 6px 14px 4px;
+  width: 100%; box-sizing: border-box;
+}
+.gh-prefetch-label {
+  font-size: 9px; color: var(--muted);
+  display: flex; justify-content: space-between; margin-bottom: 2px;
+}
+.gh-prefetch-bar {
+  height: 2px; background: var(--border); border-radius: 2px;
+  overflow: hidden; margin-bottom: 6px; width: 100%;
+}
+.gh-prefetch-bar-inner {
+  height: 100%; background: var(--accent);
+  transition: width .4s ease; width: 0%;
+}
+
+/* Spravovat zdroje */
+.sidebar-manage-link {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 6px 4px;
+  font-size: 12px; color: var(--muted);
+  background: none; border: none; cursor: pointer;
+  transition: color .15s; border-radius: 4px;
+}
+.sidebar-manage-link:hover { color: var(--text); }
+
+.gallery-main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg);
+}
+.gallery-toolbar {
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.gallery-toolbar input {
+  background: var(--s2); border: 1px solid var(--border); color: var(--text);
+  padding: 6px 12px; border-radius: 6px; font-size: 13px; flex: 1; outline: none;
+}
+.gallery-toolbar input:focus { border-color: var(--accent); }
+.gallery-grid {
+  flex: 1; overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 110px);
+  grid-auto-rows: 130px;
+  gap: 10px; padding: 14px;
+  align-content: start;
+  justify-content: start;
+}
+.logo-card {
+  width: 110px; height: 130px;
+  background: var(--s1); border: 2px solid var(--border);
+  border-radius: 8px; overflow: hidden; cursor: pointer;
+  transition: border-color .15s, transform .15s; position: relative;
+  display: flex; flex-direction: column;
+  flex-shrink: 0;
+}
+.logo-card:hover { border-color: var(--accent); transform: scale(1.03); }
+.logo-card.selected { border-color: var(--green); background: #1a2e22; }
+.logo-card img, .card-img { width: 110px; height: 110px; object-fit: contain; padding: 6px; background: #111; display: block; flex-shrink: 0; }
+.card-img-err { width: 110px; height: 110px; display: flex; align-items: center; justify-content: center; background: #111; color: var(--muted); font-size: 24px; flex-shrink: 0; }
+.logo-card .logo-name {
+  padding: 3px 6px; font-size: 10px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0; height: 20px; line-height: 14px;
+}
+.logo-card .use-btn {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; background: #0009; opacity: 0;
+  transition: opacity .15s; font-size: 12px; font-weight: 700; color: #fff;
+}
+.logo-card:hover .use-btn { opacity: 1; }
+
+/* ── Checkbox overlay na každé kartě ── */
+.logo-card .card-check {
+  position: absolute; top: 5px; left: 5px; z-index: 10;
+  width: 18px; height: 18px;
+  background: var(--s2); border: 2px solid var(--border);
+  border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--green); transition: all .12s;
+  pointer-events: none;
+}
+.logo-card:hover .card-check { border-color: var(--accent); }
+.logo-card.selected .card-check { background: var(--green); border-color: var(--green); color: #000; }
+.logo-card.selected .card-check::after { content: '✓'; font-weight: 900; }
+
+/* ── Plovoucí lišta výběru ── */
+#selectionBar {
+  display: none; align-items: center; gap: 12px;
+  padding: 10px 16px; border-top: 1px solid var(--border);
+  background: var(--s1); flex-shrink: 0;
+}
+#selectionBar.visible { display: flex; }
+#selectionBar .sel-count {
+  font-size: 13px; font-weight: 600; color: var(--green);
+}
+#selectionBar .sel-hint { font-size: 12px; color: var(--muted); flex: 1; }
+
+/* ── Multi-editor ── */
+#multiEditor {
+  display: none; flex-direction: column; flex: 1; overflow: hidden;
+}
+.multi-header {
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  background: var(--s1);
+}
+.multi-header-title { font-size: 13px; font-weight: 700; color: var(--muted); flex:1; }
+.multi-progress-badge {
+  background: var(--s3); border: 1px solid var(--border);
+  border-radius: 20px; padding: 2px 10px;
+  font-size: 12px; font-weight: 700; color: var(--text);
+}
+.multi-body { display: flex; flex: 1; overflow: hidden; }
+
+/* Filmstrip */
+.multi-filmstrip {
+  width: 160px; border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 6px; flex-shrink: 0;
+  background: var(--s1); display: flex; flex-direction: column; gap: 5px;
+}
+.multi-thumb {
+  width: 148px; height: 80px; border: 2px solid var(--border);
+  border-radius: 8px; background: #111; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px;
+  transition: border-color .12s, background .12s; flex-shrink: 0; position: relative;
+  overflow: hidden;
+}
+.multi-thumb:hover { border-color: var(--muted); }
+.multi-thumb.active { border-color: var(--accent); background: #0d1625; }
+.multi-thumb img { width: 56px; height: 56px; object-fit: contain; }
+.multi-thumb .thumb-name {
+  font-size: 10px; color: var(--muted); padding: 0 6px 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  width: 100%; text-align: center; line-height: 1.2;
+}
+.multi-thumb.active .thumb-name { color: var(--text); }
+.multi-thumb .thumb-done {
+  position: absolute; top: 4px; right: 5px; width: 16px; height: 16px;
+  background: var(--green); border-radius: 50%;
+  font-size: 9px; color: #000; font-weight: 900;
+  display: none; align-items: center; justify-content: center;
+}
+.multi-thumb.done .thumb-done { display: flex; }
+.multi-thumb .thumb-idx {
+  position: absolute; top: 4px; left: 5px;
+  font-size: 9px; color: var(--muted); font-weight: 700;
+}
+
+/* Canvas oblast */
+.multi-canvas-area {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; overflow: hidden; background: var(--bg); gap: 0;
+}
+.multi-canvas-nav {
+  display: flex; align-items: center; gap: 16px; padding: 10px 0 6px;
+}
+.multi-nav-btn {
+  background: var(--s2); border: 1px solid var(--border); color: var(--text);
+  border-radius: 6px; padding: 4px 12px; font-size: 13px; cursor: pointer;
+  transition: background .12s;
+}
+.multi-nav-btn:hover { background: var(--s3); }
+.multi-nav-btn:disabled { opacity: .3; cursor: default; }
+.multi-progress { font-size: 12px; color: var(--muted); min-width: 40px; text-align: center; }
+.ed-nav { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.ed-empty { font-size: 12px; color: var(--muted); padding: 0 8px; }
+
+/* Pravý panel */
+.multi-right {
+  width: 260px; border-left: 1px solid var(--border);
+  background: var(--s1); overflow-y: auto; flex-shrink: 0; padding: 0;
+  display: flex; flex-direction: column;
+}
+.multi-right-section {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+}
+.multi-right-section:last-child { border-bottom: none; flex: 1; }
+.multi-apply-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;
+}
+.multi-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+
+.gallery-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 40px; grid-column: 1/-1; }
+.btn-icon {
+  background: var(--s2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: 5px; padding: 1px 6px; font-size: 13px; cursor: pointer;
+  line-height: 1.4; transition: all .12s;
+}
+.btn-icon:hover { border-color: var(--accent); color: var(--text); }
+.btn-icon-red:hover { border-color: var(--red); color: var(--red); }
+
+/* ── Size picker ── */
+.size-picker {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px; font-size: 12px;
+}
+.size-picker label { color: var(--muted); white-space: nowrap; }
+.size-picker select {
+  background: transparent; border: none; color: var(--text);
+  font-size: 12px; cursor: pointer; outline: none; padding: 0;
+}
+.size-picker input {
+  background: var(--s3); border: 1px solid var(--border); color: var(--text);
+  border-radius: 4px; font-size: 11px; width: 44px; text-align: center;
+  padding: 1px 3px; outline: none;
+}
+.size-picker input:focus { border-color: var(--accent); }
+.size-picker .size-apply {
+  background: var(--accent); border: none; color: #fff;
+  border-radius: 4px; font-size: 11px; padding: 2px 7px;
+  cursor: pointer; white-space: nowrap;
+}
+.size-picker .size-apply:hover { opacity: .85; }
+
+/* ── Editor ── */
+#viewEditor { display: flex; flex: 1; overflow: hidden; flex-direction: column; position: relative; }
+
+/* Filmstrip – horizontální pruh vybraných log */
+.editor-filmstrip {
+  background: var(--s1); border-bottom: 1px solid var(--border);
+  height: 86px; display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; overflow-x: auto; flex-shrink: 0;
+  position: relative;
+}
+.ed-filmstrip-tail {
+  margin-left: auto; display: flex; flex-direction: column;
+  align-items: flex-end; gap: 5px; flex-shrink: 0; padding-left: 16px;
+  position: sticky; right: 0; background: var(--s1);
+}
+.editor-filmstrip::-webkit-scrollbar { height: 3px; }
+.editor-filmstrip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.ed-thumb {
+  width: 64px; height: 64px; border: 2px solid var(--border);
+  border-radius: 8px; background: #111; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; flex-shrink: 0; position: relative;
+  transition: border-color .12s;
+}
+.ed-thumb:hover { border-color: var(--muted); }
+.ed-thumb.active { border-color: var(--accent); }
+.ed-thumb.done { opacity: .7; }
+.ed-thumb img { width: 46px; height: 46px; object-fit: contain; }
+.ed-thumb .ed-name {
+  position: absolute; bottom: 2px; left: 0; right: 0;
+  font-size: 8px; color: var(--muted); text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 3px;
+}
+.ed-thumb-add {
+  border-style: dashed; color: var(--muted); font-size: 18px; flex-shrink: 0;
+}
+.ed-filmstrip-tail {
+  margin-left: auto; display: flex; flex-direction: column;
+  align-items: flex-end; gap: 5px; flex-shrink: 0; padding-left: 12px;
+}
+.ed-sel-badge {
+  background: #1a2e22; border: 1px solid var(--green);
+  color: var(--green); border-radius: 12px; padding: 2px 10px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+
+/* Editor body */
+.editor-body { display: flex; flex: 1; overflow: hidden; }
+.editor-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--bg); overflow: auto; padding: 20px;
+}
+
+/* Levý sloupec – poskytovatel */
+.editor-left-col {
+  width: 160px; border-right: 1px solid var(--border);
+  background: var(--s1); overflow-y: auto; flex-shrink: 0;
+  display: flex; flex-direction: column;
+}
+.editor-left-col .edsec { border-bottom: none; }
+.editor-left-col .service-select { font-size: 11px; }
+.provider-badge-list {
+  display: flex; flex-direction: column; gap: 3px; margin-top: 4px;
+}
+.overlay-item {
+  display: flex; align-items: center; gap: 5px; padding: 5px 6px;
+  border-radius: 5px; background: var(--s2); border: 1px solid transparent;
+  cursor: pointer; transition: border-color .12s; font-size: 11px;
+}
+.overlay-item:hover { border-color: var(--muted); }
+.overlay-item.active { border-color: var(--accent); background: var(--s3); }
+.overlay-item img { width: 28px; height: 28px; object-fit: contain; background:#111; border-radius:3px; flex-shrink:0; }
+.overlay-item .ov-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.overlay-item .ov-del { opacity:0; font-size:10px; color:var(--red); cursor:pointer; padding:0 2px; }
+.overlay-item:hover .ov-del { opacity:1; }
+.overlay-add-btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 5px; padding: 6px; border-radius: 5px; font-size: 11px;
+  color: var(--muted); border: 1px dashed var(--border); cursor: pointer;
+  transition: all .12s; margin-top: 4px; width: 100%;
+  background: none;
+}
+.overlay-add-btn:hover { border-color: var(--accent); color: var(--text); }
+.provider-badge-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 6px; border-radius: 5px; font-size: 11px;
+  cursor: pointer; background: var(--s2); border: 1px solid transparent;
+  transition: border-color .12s;
+}
+.provider-badge-item.sel { border-color: var(--accent); background: var(--s3); }
+.provider-badge-item input[type=checkbox] { cursor: pointer; flex-shrink: 0; }
+
+/* Pravý panel – vlastnosti + akce */
+.editor-right {
+  width: 250px; border-left: 1px solid var(--border);
+  background: var(--s1); overflow-y: auto; flex-shrink: 0;
+  display: flex; flex-direction: column;
+}
+.edsec {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+}
+#addProviderForm input {
+  background: var(--s2) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: 12px;
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+}
+#addProviderForm input:focus { border-color: var(--accent); }
+.edsec:last-child { border-bottom: none; }
+.edsec-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+}
+/* Rychlé pilulky rozlišení */
+.size-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+.size-pill {
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 2px 9px; font-size: 10px;
+  cursor: pointer; color: var(--muted); transition: all .12s;
+}
+.size-pill:hover { border-color: var(--accent); color: var(--text); }
+.size-pill.active { border-color: var(--accent); color: var(--accent); background: var(--s3); }
+/* Badge grid */
+.badge-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+}
+.badge-chip {
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px;
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; font-size: 11px; transition: all .12s;
+}
+.badge-chip.on { border-color: var(--accent); background: var(--s3); color: var(--text); }
+.badge-chip input[type=checkbox] { cursor: pointer; }
+
+.canvas-wrap {
+  position: relative; border: 2px solid var(--border); border-radius: 8px;
+  overflow: hidden; box-shadow: 0 12px 40px #0009;
+  display: inline-block; flex-shrink: 0;
+}
+#canvas {
+  display: block; cursor: crosshair;
+  background: repeating-conic-gradient(#161928 0% 25%, #0f1118 0% 50%) 0 0 / 16px 16px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+.canvas-label { font-size: 11px; color: var(--muted); text-align: center; }
+
+.badge-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 7px; margin-bottom: 4px;
+  background: var(--s2); border: 1px solid var(--border);
+  cursor: pointer; transition: all .15s;
+}
+.badge-item:hover   { border-color: var(--accent); }
+.badge-item.sel     { border-color: var(--accent); background: #1a2a4a; }
+.badge-item input[type=checkbox] { accent-color: var(--accent); }
+.badge-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Prop sliders */
+.props-wrap { padding: 0 14px 14px; }
+.prop-row { margin-bottom: 13px; }
+.prop-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+.prop-label strong { color: var(--text); }
+.prop-val { color: var(--accent); font-weight: 700; }
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px; background: var(--border); border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+}
+.pos-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 13px; }
+.pos-field label { font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px; }
+.pos-field input[type=number] {
+  background: var(--s2); border: 1px solid var(--border); color: var(--text);
+  padding: 5px 8px; border-radius: 5px; font-size: 12px; width: 100%; outline: none;
+}
+.pos-field input[type=number]:focus { border-color: var(--accent); }
+
+.service-select {
+  background: var(--s2); border: 1px solid var(--border); color: var(--text);
+  padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 100%; outline: none;
+  margin-bottom: 10px; cursor: pointer;
+}
+.service-select:focus { border-color: var(--accent); }
+
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: 7px; padding: 10px;
+  text-align: center; cursor: pointer; transition: all .2s;
+  font-size: 11px; color: var(--muted); margin-bottom: 8px;
+}
+.upload-zone:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Publish ── */
+#viewPublish { display: flex; flex: 1; overflow: hidden; }
+.publish-main {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; padding: 32px; gap: 20px; overflow-y: auto;
+  background: var(--bg);
+}
+.publish-card {
+  background: var(--s1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px; width: 100%; max-width: 540px;
+}
+.publish-card h3 { font-size: 14px; margin-bottom: 16px; color: var(--text); }
+.publish-preview {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+}
+.publish-preview canvas { border: 1px solid var(--border); border-radius: 6px; }
+.publish-preview .info { font-size: 12px; color: var(--muted); line-height: 1.8; }
+.publish-preview .info strong { color: var(--text); }
+.field-row { margin-bottom: 14px; }
+.field-row label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+.field-row input {
+  background: var(--s2); border: 1px solid var(--border); color: var(--text);
+  padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 100%; outline: none;
+}
+.field-row input:focus { border-color: var(--accent); }
+.config-hint { font-size: 11px; color: var(--muted); background: var(--s2); border-radius: 6px; padding: 10px 12px; line-height: 1.7; }
+.config-hint code { color: var(--accent); font-family: monospace; }
+
+/* ── Buttons ── */
+.btn {
+  padding: 8px 14px; border-radius: 7px; border: none; font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: all .15s; text-align: center;
+  display: inline-block;
+}
+.btn-primary { background: var(--accent);  color: #fff; }
+.btn-primary:hover { filter: brightness(1.15); }
+.btn-green   { background: var(--green);   color: #0a2a1a; }
+.btn-green:hover { filter: brightness(1.1); }
+.btn-orange  { background: var(--orange);  color: #1a0f00; }
+.btn-orange:hover { filter: brightness(1.1); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-full { width: 100%; display: block; padding: 10px; }
+.btn-sm   { padding: 5px 10px; font-size: 11px; }
+.actions  { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 7px; }
+
+/* ── Divider ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+
+/* ── Spinner ── */
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Skeleton ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skel {
+  background: linear-gradient(90deg, var(--s2) 25%, var(--s3) 50%, var(--s2) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+.logo-card .skel-img  { width: 110px; height: 110px; flex-shrink: 0; }
+.logo-card .skel-name { height: 20px; width: 100%; flex-shrink: 0; border-radius: 0; margin: 0; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 200px; right: 20px;
+  padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 9999;
+  border: 1px solid var(--border); background: var(--s2);
+}
+#toast.show { opacity: 1; }
+#toast.ok  { border-color: var(--green);  color: var(--green); }
+#toast.err { border-color: var(--red);    color: var(--red); }
+#toast.inf { border-color: var(--accent); color: var(--accent); }
+
+.hidden { display: none !important; }
+
+/* ── Log panel ── */
+#logPanel {
+  flex-shrink: 0;
+  background: var(--s1);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: height .25s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  height: 160px;
+}
+#logPanel.collapsed { height: 28px; }
+#logHeader {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; height: 28px; flex-shrink: 0;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+#logPanel.collapsed #logHeader { border-bottom-color: transparent; }
+#logHeader:hover { background: var(--s2); }
+#logTitle {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--muted); flex: 1;
+}
+#logToggleBtn {
+  background: none; border: none; color: var(--muted);
+  font-size: 14px; cursor: pointer; padding: 0 2px;
+  line-height: 1; transition: transform .25s;
+}
+#logPanel.collapsed #logToggleBtn { transform: rotate(180deg); }
+#logDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0;
+  transition: background .3s;
+}
+#logDot.active { background: var(--green); animation: pulse 1.5s infinite; }
+#logBody {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 4px 12px 6px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px; line-height: 1.6;
+}
+#logBody::-webkit-scrollbar { width: 4px; }
+#logBody::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.log-line { white-space: pre-wrap; word-break: break-all; color: var(--muted); }
+.log-line.info  { color: var(--text); }
+.log-line.ok    { color: var(--green); }
+.log-line.warn  { color: var(--orange); }
+.log-line.err   { color: var(--red); }
+.log-line.acc   { color: var(--accent); }
+
+/* ── Sources stránka ── */
+#viewSources { flex: 1; overflow-y: auto; padding: 32px; background: var(--bg); }
+.sources-page { max-width: 700px; margin: 0 auto; }
+.sources-page h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.sources-page .page-desc { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.sources-section { margin-bottom: 32px; }
+.sources-section h3 { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.src-card { background: var(--s1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+.src-card-info { flex: 1; min-width: 0; }
+.src-card-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.src-card-meta { font-size: 11px; color: var(--muted); }
+.src-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.src-dot-lg { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.add-src-form { background: var(--s1); border: 1px dashed var(--border); border-radius: 10px; padding: 16px; margin-top: 4px; }
+.add-src-form .form-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.add-src-form label { font-size: 11px; color: var(--muted); width: 60px; flex-shrink: 0; }
+.add-src-form input { flex: 1; background: var(--s2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; padding: 6px 10px; outline: none; }
+.add-src-form input:focus { border-color: var(--accent); }
+.add-src-form input::placeholder { color: var(--muted); }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.src-empty { font-size: 12px; color: var(--muted); padding: 4px 0 8px; }
+.file-pick-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 6px; border: 1px dashed var(--border);
+  background: transparent; color: var(--muted); font-size: 12px;
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.file-pick-btn:hover { border-color: var(--accent); color: var(--text); }
+
+/* ── GitHub tab ── */
+#viewGithub { flex-direction: row; }
+#ghToken, #ghToken::placeholder { font-family: monospace; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎬 Picon Studio</h1>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('gallery')">📂 Galerie</button>
+    <button class="tab"        onclick="switchTab('editor')">🎨 Editor</button>
+    <button class="tab"        onclick="switchTab('github')">🐙 GitHub</button>
+  </div>
+  <div class="header-right">
+    <button class="tab-settings" id="btnSettings" onclick="switchTab('sources')">⚙ Nastavení</button>
+    <span class="version">v2.0</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB: GALERIE
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="viewGallery" style="display:flex;">
+
+    <div class="gallery-sidebar">
+      <div class="sidebar-scroll" id="sourceList"></div>
+      <div class="sidebar-footer">
+      </div>
+    </div>
+
+    <div class="gallery-main">
+      <div class="gallery-toolbar">
+        <span id="galleryTitle" style="font-size:13px;color:var(--muted);white-space:nowrap">Vyber zdroj vlevo</span>
+        <input id="gallerySearch" placeholder="🔍 Hledat logo…" oninput="filterGallery()" style="display:none">
+        <button class="btn btn-sm btn-outline" id="btnGalleryRefresh" onclick="refreshGallery()" style="display:none">↺ Obnovit</button>
+      </div>
+      <div class="gallery-grid" id="galleryGrid">
+        <div class="gallery-empty">← Vyber zdroj pro zobrazení log</div>
+      </div>
+      <!-- Plovoucí lišta výběru -->
+      <div id="selectionBar">
+        <span class="sel-count" id="selCount">0 vybráno</span>
+        <span class="sel-hint" id="selHint">Shift+klik = rozsah · výběr přetrvává při přepnutí zdroje</span>
+        <button class="btn btn-sm btn-outline" onclick="clearSelection()">✕ Zrušit</button>
+        <button class="btn btn-sm btn-accent" onclick="switchTab('editor')">🎨 Upravit vybrané →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       MULTI-EDITOR
+  ═══════════════════════════════════════════════════════════════ -->
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB: EDITOR
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="viewEditor" style="display:none;flex-direction:column;flex:1;overflow:hidden;position:relative;">
+
+  <!-- ── Filmstrip – vybraná loga ── -->
+  <div class="editor-filmstrip" id="editorFilmstrip">
+    <div class="ed-empty" id="edFilmstripEmpty">← Vyber loga v Galerii</div>
+    <div class="ed-filmstrip-tail" id="edFilmstripTail" style="display:none">
+      <span class="ed-sel-badge" id="edSelBadge">0 vybráno</span>
+    </div>
+  </div>
+
+  <!-- ── Editor body ── -->
+  <div class="editor-body">
+
+      <!-- Levý sloupec: Poskytovatel + Grafické vrstvy -->
+      <div class="editor-left-col">
+
+        <!-- ── POSKYTOVATEL ── -->
+        <div class="edsec">
+          <div class="edsec-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span>Poskytovatel</span>
+            <span style="display:flex;gap:3px">
+              <button class="btn-icon" onclick="showAddProvider()" title="Přidat">＋</button>
+              <button class="btn-icon btn-icon-red" onclick="deleteCurrentProvider()" title="Smazat">✕</button>
+            </span>
+          </div>
+          <select class="service-select" id="serviceSelect" onchange="onServiceChange()" style="width:100%"></select>
+
+
+          <div id="addProviderForm" style="display:none;margin-top:6px;padding:6px;background:var(--s3);border-radius:6px;border:1px solid var(--accent);box-sizing:border-box">
+            <input id="newProviderName" placeholder="název..."
+              style="margin-bottom:5px"
+              onkeydown="if(event.key==='Enter')addProvider()">
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-sm btn-accent" style="flex:1;font-size:11px" onclick="addProvider()">Přidat</button>
+              <button class="btn btn-sm btn-outline" style="font-size:11px" onclick="hideAddProvider()">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── GRAFICKÉ VRSTVY ── -->
+        <div class="edsec" style="border-bottom:none">
+          <div class="edsec-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span>Grafické vrstvy</span>
+            <button class="btn-icon" onclick="showAddOverlay()" title="Přidat vrstvu">＋</button>
+          </div>
+
+          <!-- Formulář přidání vrstvy -->
+          <div id="addOverlayForm" style="display:none;margin-bottom:6px;padding:6px;background:var(--s3);border-radius:6px;border:1px solid var(--accent);box-sizing:border-box">
+            <input id="newOverlayName" placeholder="název vrstvy..."
+              style="margin-bottom:5px;width:100%;box-sizing:border-box"
+              onkeydown="if(event.key==='Enter')addNamedOverlay()">
+            <label style="display:flex;align-items:center;gap:4px;margin-bottom:5px;cursor:pointer">
+              <input type="file" id="newOverlayFile" accept=".png" style="display:none"
+                onchange="document.getElementById('newOverlayFileName').textContent=this.files[0]?.name||''">
+              <button class="btn btn-sm btn-outline" style="font-size:11px;white-space:nowrap" onclick="document.getElementById('newOverlayFile').click()">📂 PNG</button>
+              <span id="newOverlayFileName" style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span>
+            </label>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-sm btn-accent" style="flex:1;font-size:11px" onclick="addNamedOverlay()">Přidat</button>
+              <button class="btn btn-sm btn-outline" style="font-size:11px" onclick="hideAddOverlay()">✕</button>
+            </div>
+          </div>
+
+          <!-- Seznam vrstev – kompaktní chip řádky -->
+          <input type="file" id="overlayUploadInput" accept=".png" multiple style="display:none">
+          <div id="overlayListWrap" style="display:flex;flex-direction:column;gap:2px"></div>
+
+          <!-- Properties panel – zobrazí se po kliknutí na vrstvu -->
+          <div id="propsPanel" class="hidden" style="margin-top:8px;padding:8px;background:var(--s2);border-radius:6px;border:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:5px">
+              <input id="overlayNameInput" placeholder="název vrstvy..."
+                style="background:var(--s1);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 6px;font-size:11px;flex:1;outline:none;min-width:0"
+                oninput="renameCurrentOverlay(this.value)">
+              <button class="btn-icon btn-icon-red" onclick="removeActiveOverlay()" title="Odebrat">🗑</button>
+            </div>
+            <div class="pos-row">
+              <div class="pos-field"><label>X</label><input type="number" id="pX" min="0" onchange="propsToState()"></div>
+              <div class="pos-field"><label>Y</label><input type="number" id="pY" min="0" onchange="propsToState()"></div>
+            </div>
+            <div class="prop-row">
+              <div class="prop-label"><strong>Velikost</strong><span class="prop-val" id="vScale">100%</span></div>
+              <input type="range" id="pScale" min="10" max="300" value="100" oninput="sliderChange()">
+            </div>
+            <div class="prop-row">
+              <div class="prop-label"><strong>Otočení</strong><span class="prop-val" id="vRotation">0°</span></div>
+              <input type="range" id="pRotation" min="0" max="360" value="0" oninput="sliderChange()">
+            </div>
+            <div class="prop-row" style="margin-bottom:5px">
+              <div class="prop-label"><strong>Průhlednost</strong><span class="prop-val" id="vOpacity">100%</span></div>
+              <input type="range" id="pOpacity" min="0" max="100" value="100" oninput="sliderChange()">
+            </div>
+            <button class="btn btn-outline btn-full" onclick="resetBadge()" style="font-size:11px">↺ Reset</button>
+          </div>
+          <!-- zachováno pro JS kompatibilitu -->
+          <div id="noBadgeSel" style="display:none"></div>
+          <div id="overlayNameWrap" style="display:none"></div>
+          <select id="overlaySelect" style="display:none" onchange="onOverlaySelect()">
+            <option value="">— žádná vrstva —</option>
+          </select>
+        </div>
+
+      </div>
+
+    <!-- Canvas -->
+    <div class="editor-center">
+      <div class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+      </div>
+      <!-- Navigace mezi ikonami (viditelná jen když je vybráno víc) -->
+      <div class="ed-nav" id="edNav" style="display:none">
+        <button class="multi-nav-btn" id="edBtnPrev" onclick="edNavigate(-1)">← Předchozí</button>
+        <span class="multi-progress" id="edProgress"></span>
+        <button class="multi-nav-btn" id="edBtnNext" onclick="edNavigate(1)">Další →</button>
+      </div>
+      <div class="canvas-label" id="canvasLabel" style="margin-top:6px">•  táhni badge myší</div>
+    </div>
+
+    <!-- Pravý panel -->
+    <div class="editor-right">
+
+      <!-- Výstupní rozlišení -->
+      <div class="edsec">
+        <div class="edsec-title">Výstupní rozlišení</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="number" id="sizeW" min="16" max="4096" value="1024"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12px;width:72px;outline:none;text-align:center">
+          <span style="color:var(--muted)">×</span>
+          <input type="number" id="sizeH" min="16" max="4096" value="1024"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12px;width:72px;outline:none;text-align:center">
+          <button class="btn btn-sm btn-accent" onclick="applySize()" style="white-space:nowrap">Použít</button>
+        </div>
+        <div class="size-pills" id="sizePills">
+          <span class="size-pill active" data-w="1024" data-h="1024" onclick="quickSize(this)">1024×1024</span>
+          <span class="size-pill" data-w="800" data-h="480" onclick="quickSize(this)">800×480</span>
+          <span class="size-pill" data-w="400" data-h="240" onclick="quickSize(this)">400×240</span>
+          <span class="size-pill" data-w="220" data-h="132" onclick="quickSize(this)">220×132</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="chkStretch" onchange="render()">
+            Roztáhnout na celou plochu
+          </label>
+          <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="chkAutoBg" onchange="render()">
+            Auto-pozadí podle rohu picony
+          </label>
+        </div>
+      </div>
+
+      <!-- skryté inputy pro JS handlery loga -->
+      <input type="file" id="logoInput" accept=".png" style="display:none">
+      <input id="logoUrlInput" style="display:none">
+
+      <!-- Kopírovat na ostatní (jen při víc ikonách) -->
+      <div class="edsec" id="secApplyAll" style="display:none">
+        <div class="edsec-title" style="display:flex;align-items:center;gap:5px">
+          <span>📤</span> Kopírovat na ostatní
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+          <button class="btn btn-sm btn-outline" onclick="applyLayoutToAll()" title="Přenese pozice a velikosti vrstev na všechna ostatní loga">
+            🗂 Vrstvy
+          </button>
+          <button class="btn btn-sm btn-outline" onclick="applyBadgesToAll()" title="Přenese aktivní badges na všechna ostatní loga">
+            🏷 Badges
+          </button>
+        </div>
+      </div>
+
+      <!-- Akce -->
+      <div class="edsec">
+        <div class="edsec-title" style="display:flex;align-items:center;gap:5px">
+          <span>⚡</span> Akce
+        </div>
+
+        <!-- Uložit / Reset -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+          <button class="btn btn-green btn-full" onclick="saveLayout()" title="Uloží layout vrstev pro tuto službu na server">
+            💾 Uložit layout
+          </button>
+          <button class="btn btn-orange btn-full" onclick="resetAll()" title="Resetuje vrstvy na výchozí hodnoty">
+            ↺ Resetovat
+          </button>
+        </div>
+
+        <!-- Export PNG -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+          <button class="btn btn-outline btn-full" onclick="edExportCurrent()" title="Stáhnout aktuální ikonu jako PNG">
+            ⬇ Stáhnout PNG
+          </button>
+          <button class="btn btn-outline btn-full" onclick="edExportAll()" id="btnExportAll" style="display:none" title="Stáhnout všechny ikony jako PNG">
+            ⬇ Stáhnout vše
+          </button>
+        </div>
+
+        <!-- Přejít na Publish -->
+        <button class="btn btn-primary btn-full" onclick="switchTab('github')" style="margin-top:6px">
+          🐙 Publikovat na GitHub →
+        </button>
+      </div>
+
+      <!-- skrytý file input pro badge upload (používá JS handler) -->
+      <input type="file" id="fileInput" accept=".png" style="display:none">
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+       TAB: GITHUB – souborový manažer + upload
+  ═══════════════════════════════════════════════════════════════ -->
+<div id="viewGithub" style="display:none;flex:1;overflow:hidden;flex-direction:row;background:var(--bg)">
+
+  <!-- ══ Levý panel: přihlášení + souborový manažer ══ -->
+  <div style="width:340px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden">
+
+    <!-- Přihlášení (zkolabovatelné) -->
+    <div id="ghLoginSection" style="border-bottom:1px solid var(--border)">
+      <div onclick="ghToggleLogin()"
+           style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none">
+        <span id="ghLoginIcon" style="font-size:13px">🔑</span>
+        <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.08em;flex:1">PŘIHLÁŠENÍ</span>
+        <span id="ghLoginArrow" style="color:var(--muted);font-size:11px">▼</span>
+      </div>
+      <div id="ghLoginBody" style="padding:0 14px 14px;display:flex;flex-direction:column;gap:7px">
+        <input id="ghToken" type="password" placeholder="GitHub token (ghp_...)"
+          style="background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;font-family:monospace;width:100%;box-sizing:border-box">
+        <input id="ghRepo" placeholder="vlastník/repozitář  (např. jan/picony)"
+          style="background:var(--s2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;width:100%;box-sizing:border-box">
+        <button class="btn btn-accent btn-full" onclick="ghSaveCreds()" style="font-size:12px;padding:8px">
+          💾 Uložit přihlášení
+        </button>
+        <div id="ghCredsStatus" style="font-size:11px;color:var(--muted);text-align:center;min-height:14px"></div>
+      </div>
+    </div>
+
+    <!-- Toolbar souborového manažera -->
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px">
+      <div id="ghBreadcrumb" style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        —
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="ghMkdir()" id="btnGhMkdir" style="display:none;padding:4px 8px;font-size:11px">📁+</button>
+      <button class="btn btn-sm btn-outline" onclick="ghRefresh()" id="btnGhRefresh" style="display:none;padding:4px 8px;font-size:11px">↺</button>
+    </div>
+
+    <!-- Souborový strom -->
+    <div id="ghFileList" style="flex:1;overflow-y:auto;padding:4px 8px">
+      <div style="color:var(--muted);font-size:12px;padding:20px 8px;text-align:center">
+        Ulož přihlášení a vyber repozitář…
+      </div>
+    </div>
+
+    <!-- Repozitáře (fixní výška dole) -->
+    <div style="border-top:1px solid var(--border);max-height:180px;overflow-y:auto;padding:8px">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.08em;padding:2px 4px 6px;display:flex;align-items:center;justify-content:space-between">
+        <span>📦 REPOZITÁŘE</span>
+        <button class="btn btn-sm btn-outline" onclick="ghCreateRepo()" title="Vytvořit nový repozitář" style="padding:2px 7px;font-size:11px;line-height:1.4">＋</button>
+      </div>
+      <div id="ghRepoList" style="display:flex;flex-direction:column;gap:3px">
+        <div style="color:var(--muted);font-size:11px;padding:4px">Nejprve ulož přihlášení…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ Pravý panel: fronta nahrávání ══ -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+
+    <!-- Header fronty -->
+    <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Fronta nahrávání</div>
+        <div id="ghUploadTarget" style="font-size:11px;color:var(--muted);margin-top:2px">
+          Vyber cílovou složku vlevo kliknutím na 📁
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="ghQueueRefreshFromEditor()" style="font-size:11px">
+        ↺ Načíst z Editoru
+      </button>
+      <button class="btn btn-green" onclick="ghUploadAll()" id="btnGhUploadAll" style="font-size:12px;padding:7px 16px" disabled>
+        ⬆ Nahrát vše
+      </button>
+    </div>
+
+    <!-- Fronta -->
+    <div id="ghQueue" style="flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:6px">
+      <div style="color:var(--muted);font-size:13px;padding:24px 0;text-align:center">
+        Přejdi do Editoru, uprav ikony a klikni ↺ Načíst z Editoru
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div id="ghUploadLog" style="display:none;border-top:1px solid var(--border);max-height:100px;overflow-y:auto;padding:6px 14px;font-size:11px;color:var(--muted)"></div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+       TAB: ZDROJE
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="viewSources" style="display:none;">
+    <div class="sources-page">
+      <h2>⚙ Správa zdrojů</h2>
+      <p class="page-desc">Přidej, odeber nebo nahraj balíčky ikon. Změny se projeví okamžitě v Galerii.</p>
+
+      <!-- ── GitHub zdroje ── -->
+      <div class="sources-section">
+        <h3>GitHub zdroje</h3>
+        <div id="srcGithubList"><div class="src-empty">Načítám…</div></div>
+
+        <div class="add-src-form" id="addGhForm" style="display:none">
+          <div class="form-row">
+            <label>Repozitář</label>
+            <input id="addGhRepo" placeholder="owner/repo  (např. MarhyCZ/picons)">
+          </div>
+          <div class="form-row">
+            <label>Složka</label>
+            <input id="addGhPath" placeholder="1024  (prázdné = kořen repozitáře)">
+          </div>
+          <div class="form-row">
+            <label>Token</label>
+            <input id="addGhToken" placeholder="ghp_...  (nepovinné, pro privátní repo)" type="password">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-sm btn-outline" onclick="toggleForm('addGhForm')">Zrušit</button>
+            <button class="btn btn-sm btn-accent" onclick="addGithubSource()">➕ Přidat</button>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="toggleForm('addGhForm')">➕ Přidat GitHub zdroj</button>
+      </div>
+
+      <!-- ── Vlastní logo balíčky ── -->
+      <div class="sources-section">
+        <h3>Vlastní loga</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Nahraj vlastní PNG soubory jako pojmenovaný balíček. Zobrazí se jako zdroj v Galerii.</p>
+        <div id="srcLocalList"><div class="src-empty">Načítám…</div></div>
+
+        <div class="add-src-form" id="addLocalForm" style="display:none">
+          <div class="form-row">
+            <label>Název</label>
+            <input id="addLocalName" placeholder="Moje loga  (libovolný název)">
+          </div>
+          <div class="form-row" style="align-items:flex-start">
+            <label style="padding-top:6px">Soubory</label>
+            <div style="flex:1">
+              <label class="file-pick-btn" id="localFilePickBtn">
+                📂 Vybrat PNG soubory
+                <input type="file" accept=".png" multiple style="display:none" id="localFilePick" onchange="updateFilePick('localFilePick','localFilePickBtn')">
+              </label>
+              <div id="localFileCount" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-sm btn-outline" onclick="toggleForm('addLocalForm')">Zrušit</button>
+            <button class="btn btn-sm btn-accent" onclick="uploadLocalPack()">⬆ Nahrát balíček</button>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="toggleForm('addLocalForm')">➕ Přidat vlastní balíček</button>
+      </div>
+
+      <!-- ── XBMC-Kodi.cz ── -->
+      <div class="sources-section">
+        <h3>XBMC-Kodi.cz</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+          Loga stažená ze <a href="https://www.xbmc-kodi.cz/prispevek-tv-logo-pack" target="_blank" style="color:var(--accent)">xbmc-kodi.cz TV Logo Pack</a>.
+          Po vyplnění údajů se synchronizace spustí automaticky při každém startu serveru.
+        </p>
+
+        <!-- Credentials formulář -->
+        <div class="add-src-form" style="display:block;margin-bottom:12px">
+          <div class="form-row">
+            <label>Login</label>
+            <input id="xbmcCfgUser" placeholder="uživatelské jméno na xbmc-kodi.cz" oninput="xbmcCredsDirty=true">
+          </div>
+          <div class="form-row">
+            <label>Heslo</label>
+            <input id="xbmcCfgPass" type="password" placeholder="heslo" oninput="xbmcCredsDirty=true">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-sm btn-accent" onclick="saveXbmcCreds()">💾 Uložit přihlašovací údaje</button>
+            <button class="btn btn-sm btn-outline" onclick="testAndSyncXbmc()" id="xbmcSyncBtn">▶ Synchronizovat nyní</button>
+          </div>
+        </div>
+
+        <div id="srcXbmcList"><div class="src-empty">Načítám…</div></div>
+      </div>
+
+      <!-- ── Chocholousek balíčky ── -->
+      <div class="sources-section">
+        <h3>Chocholousek picons</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Stáhni archiv (.7z) z <a href="https://picon.cz" target="_blank" style="color:var(--accent)">picon.cz</a>, pojmenuj ho a nahraj. Zobrazí se jako zdroj v Galerii.</p>
+        <div id="srcChochoList"><div class="src-empty">Načítám…</div></div>
+
+        <div class="add-src-form" id="addChochoForm" style="display:none">
+          <div class="form-row">
+            <label>Název</label>
+            <input id="addChochoName" placeholder="piconblack  (libovolný název balíčku)">
+          </div>
+          <div class="form-row" style="align-items:flex-start">
+            <label style="padding-top:6px">Archiv</label>
+            <div style="flex:1">
+              <label class="file-pick-btn" id="chochoFilePickBtn">
+                📦 Vybrat .7z archiv
+                <input type="file" accept=".7z" multiple style="display:none" id="chochoFilePick" onchange="updateFilePick('chochoFilePick','chochoFilePickBtn')">
+              </label>
+              <div id="chochoFileCount" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-sm btn-outline" onclick="toggleForm('addChochoForm')">Zrušit</button>
+            <button class="btn btn-sm btn-accent" onclick="uploadChochoPack()">⬆ Nahrát balíček</button>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="toggleForm('addChochoForm')">➕ Přidat Chocholousek balíček</button>
+      </div>
+
+    </div>
+  </div>
+
+
+</div><!-- .main -->
+
+<div id="toast"></div>
+
+<!-- ── Log panel ── -->
+<div id="logPanel" class="collapsed">
+  <div id="logHeader" onclick="toggleLog()">
+    <div id="logDot"></div>
+    <span id="logTitle">Výstup serveru</span>
+    <span id="logCount" style="font-size:10px;color:var(--muted)"></span>
+    <button id="logToggleBtn" title="Zobrazit / skrýt log">▲</button>
+  </div>
+  <div id="logBody"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+//  KONFIGURACE & KONSTANTY
+// ════════════════════════════════════════════════════════════════════
+const BADGE_TYPES  = [];  // odstraněno – používáme OV_LAYERS
+const BADGE_COLORS = { dvbs2:'#5b8def', dvbt2:'#f59e0b', iptv:'#8b5cf6', radio:'#64748b', enc:'#f87171' };
+const BADGE_LABELS = { dvbs2:'DVB-S2 (Satelit)', dvbt2:'DVB-T2 (Terestr)', iptv:'IPTV (Stream)', radio:'Radio', enc:'Encrypted' };
+const SERVICES     = ['skylink'];  // ostatní se načtou ze serveru
+let xbmcCredsDirty = false;  // deklarace musí být před HTML inline handlery
+const DEF_LAYOUT   = {
+  dvbs2:{x:162,y:104,scale:1,rotation:0,opacity:1},
+  dvbt2:{x:162,y:104,scale:1,rotation:0,opacity:1},
+  iptv: {x:162,y:104,scale:1,rotation:0,opacity:1},
+  radio:{x:4,  y:104,scale:1,rotation:0,opacity:1},
+  enc:  {x:162,y:4,  scale:.8,rotation:0,opacity:.9},
+};
+let W = 1024, H = 1024;  // načte se z /api/config
+
+// ════════════════════════════════════════════════════════════════════
+//  STAV
+// ════════════════════════════════════════════════════════════════════
+const S = {
+  tab:           'gallery',
+  service:       SERVICES[0],
+  selBadge:      null,
+  active:        Object.fromEntries(BADGE_TYPES.map(b=>[b,false])),
+  layout:        JSON.parse(JSON.stringify(DEF_LAYOUT)),
+  badgeImgs:     {},
+  logoImg:       null,
+  drag:          null,
+  gallerySource: null,
+  galleryItems:  [],
+  publishData:   null,
+};
+
+// ════════════════════════════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll('.tabs .tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['gallery','editor','publish'][i]===tab);
+  });
+  // Nastavení tlačítko mimo .tabs
+  const settingsBtn = document.getElementById('btnSettings');
+  if (settingsBtn) settingsBtn.classList.toggle('active', tab === 'sources');
+  document.getElementById('viewGallery').style.display = (tab==='gallery') ? 'flex' : 'none';
+  document.getElementById('viewEditor') .style.display = (tab==='editor')  ? 'flex' : 'none';
+  document.getElementById('viewGithub') .style.display = (tab==='github')  ? 'flex' : 'none';
+  document.getElementById('viewSources').style.display = (tab==='sources') ? 'flex' : 'none';
+  if (tab==='editor') { setTimeout(() => { _resizeCanvases(); if (ED.items.length > 0) loadEditorItem(ED.idx); }, 10); }
+  if (tab==='github')  ghLoad();
+  if (tab==='sources') loadSourcesPage();
+}
+
+// Vždy začni na Galerii
+switchTab('gallery');
+
+// ════════════════════════════════════════════════════════════════════
+//  GALERIE
+// ════════════════════════════════════════════════════════════════════
+// ────────────────────────────────────────────────────────────────
+// Lokální soubory
+// ────────────────────────────────────────────────────────────────
+function loadLocalFiles(files) {
+  if (!files || !files.length) return;
+  const logos = [];
+  let loaded = 0;
+  const total = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.png')).length;
+  if (!total) { toast('Žádné PNG soubory', 'err'); return; }
+
+  const src = { name: 'Lokální soubory', type: 'local', local: true };
+  S.gallerySource = src;
+
+  // Označení aktivního zdroje
+  document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+
+  const grid  = document.getElementById('galleryGrid');
+  const title = document.getElementById('galleryTitle');
+  const search = document.getElementById('gallerySearch');
+  const btnRef = document.getElementById('btnGalleryRefresh');
+  title.textContent = `Lokální soubory – načítám (${total})…`;
+  search.style.display = 'none';
+  btnRef.style.display = 'none';
+  grid.innerHTML = '';
+
+  // Ukaž skeletony
+  for (let i = 0; i < Math.min(total, 12); i++) {
+    const ph = document.createElement('div');
+    ph.className = 'logo-card';
+    ph.style.pointerEvents = 'none';
+    ph.innerHTML = '<div class="skel skel-img"></div><div class="skel skel-name"></div>';
+    grid.appendChild(ph);
+  }
+
+  Array.from(files).forEach(file => {
+    if (!file.name.toLowerCase().endsWith('.png')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      logos.push({ name: file.name, download_url: ev.target.result, local: true, _blob: true });
+      loaded++;
+      if (loaded === total) {
+        grid.innerHTML = '';
+        title.textContent = `Lokální soubory (${total})`;
+        search.style.display = '';
+        G.localLogos = logos;  // uložíme pro search
+        appendLogoCards(grid, logos);
+        updateSentinel(grid);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ────────────────────────────────────────────────────────────────
+// Vlastní GitHub zdroj
+// ────────────────────────────────────────────────────────────────
+async function loadCustomGithub() {
+  const inp = document.getElementById('customGhInput');
+  if (!inp) return;
+  let val = inp.value.trim();
+  if (!val) { toast('Zadej owner/repo nebo URL', 'err'); return; }
+
+  // Parsuj různé formáty
+  // https://github.com/owner/repo/tree/branch/folder  ->  owner/repo  + path=folder
+  // https://github.com/owner/repo/tree/branch         ->  owner/repo
+  // https://github.com/owner/repo                     ->  owner/repo
+  // owner/repo/folder                                 ->  owner/repo  + path=folder
+  // owner/repo                                        ->  owner/repo
+  let repo = '', path = '';
+  const ghUrlMatch = val.match(/github\.com\/([^\/]+\/[^\/]+)(?:\/tree\/[^\/]+\/?(.*)?)?/);
+  if (ghUrlMatch) {
+    repo = ghUrlMatch[1];
+    path = (ghUrlMatch[2] || '').replace(/\/+$/, '');
+  } else {
+    const parts = val.replace(/^\//,'').split('/');
+    repo = parts[0] + '/' + parts[1];
+    path = parts.slice(2).join('/');
+  }
+
+  if (!repo || !repo.includes('/')) { toast('Neplatný formát. Použij owner/repo', 'err'); return; }
+
+  const src = { name: repo + (path ? '/' + path : ''), type: 'github', repo, path };
+  inp.value = '';
+  toast(`Načítám ${src.name}…`, 'inf');
+  loadGallery(src, true);
+}
+
+async function loadSources(attempt = 0) {
+  console.log('[loadSources] volání, pokus', attempt);
+  const list = document.getElementById('sourceList');
+  if (!list) { setTimeout(() => loadSources(0), 300); return; }  // DOM ještě není ready
+
+  if (attempt === 0) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px">Načítám zdroje…</div>';
+  }
+
+  let sources;
+  try {
+    const ac = new AbortController();
+    const tid = setTimeout(() => ac.abort(), 8000);
+    const r = await fetch('/api/sources', { signal: ac.signal });
+    clearTimeout(tid);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    sources = await r.json();
+    console.log('[loadSources] sources:', sources);
+  } catch(e) {
+    if (attempt < 5) {
+      list.innerHTML = `<div style="color:var(--muted);font-size:11px;padding:12px">Připojuji… (${attempt+1}/5)</div>`;
+      setTimeout(() => loadSources(attempt + 1), 2000);
+      return;
+    }
+    list.innerHTML = `<div style="color:var(--red);font-size:11px;padding:12px">Chyba: ${e.message}</div>`;
+    return;
+  }
+
+  if (!Array.isArray(sources)) sources = [];
+
+  // Pokud server vrátí prázdné pole (startup race condition), zkus znovu
+  if (sources.length === 0 && attempt < 5) {
+    list.innerHTML = `<div style="color:var(--muted);font-size:11px;padding:12px">Čekám na server… (${attempt+1}/5)</div>`;
+    setTimeout(() => loadSources(attempt + 1), 2000);
+    return;
+  }
+
+  list.innerHTML = '';
+  const github = sources.filter(s => s.type === 'github' || !s.type);
+  const locals = sources.filter(s => s.type === 'local_pack');
+  const chocho = sources.filter(s => s.type === 'chocho_pack');
+
+  // ── GitHub zdroje ────────────────────────────────────────────────
+  if (github.length) {
+    const lbl = document.createElement('span');
+    lbl.className = 'src-section';
+    lbl.textContent = 'GitHub';
+    list.appendChild(lbl);
+
+    for (const src of github) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;';
+
+      const btn = document.createElement('button');
+      btn.className = 'source-btn';
+      btn.style.flex = '1';
+      btn.dataset.name = src.name;
+      btn.innerHTML =
+        `<span class="src-dot" style="background:var(--accent)"></span>` +
+        `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${src.name}</span>`;
+      btn.onclick = () => loadGallery(src);
+
+      const refBtn = document.createElement('button');
+      refBtn.className = 'src-refresh-btn';
+      refBtn.title = `Aktualizovat ${src.name}`;
+      refBtn.textContent = '↻';
+      refBtn.onclick = async e => {
+        e.stopPropagation();
+        refBtn.textContent = '…'; refBtn.disabled = true;
+        try {
+          const res = await fetch('/api/gallery/refresh', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({source: src.name})
+          });
+          const d = await res.json();
+          refBtn.textContent = d.ok ? '✓' : '✗';
+          if (d.ok && S.gallerySource?.name === src.name) { G.page = 0; loadGallery(src); }
+          const pw = document.getElementById('ghPrefetchWrap');
+          if (pw && d.ok) pollGhPrefetch(pw, github);
+        } catch(_e) { refBtn.textContent = '✗'; }
+        setTimeout(() => { refBtn.textContent = '↻'; refBtn.disabled = false; }, 2500);
+      };
+
+      row.appendChild(btn);
+      row.appendChild(refBtn);
+      list.appendChild(row);
+    }
+  }
+
+  // ── Vlastní balíčky ──────────────────────────────────────────────
+  if (locals.length) {
+    const lbl = document.createElement('span');
+    lbl.className = 'src-section';
+    lbl.textContent = 'Vlastní loga';
+    list.appendChild(lbl);
+    for (const src of locals) {
+      const btn = document.createElement('button');
+      btn.className = 'source-btn';
+      btn.dataset.name = src.name;
+      btn.innerHTML =
+        `<span class="src-dot" style="background:var(--green)"></span>` +
+        `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${src.name}</span>` +
+        `<span class="src-status">${src.count || 0}</span>`;
+      btn.onclick = () => loadGallery(src);
+      list.appendChild(btn);
+    }
+  }
+
+  // ── Chocholousek balíčky ─────────────────────────────────────────
+  if (chocho.length) {
+    const lbl = document.createElement('span');
+    lbl.className = 'src-section';
+    lbl.textContent = 'Chocholousek';
+    list.appendChild(lbl);
+    for (const src of chocho) {
+      const btn = document.createElement('button');
+      btn.className = 'source-btn';
+      btn.dataset.name = src.name;
+      btn.innerHTML =
+        `<span class="src-dot" style="background:var(--orange)"></span>` +
+        `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${src.name}</span>` +
+        `<span class="src-status">${src.count || 0}</span>`;
+      btn.onclick = () => loadGallery(src);
+      list.appendChild(btn);
+    }
+  }
+
+  // ── XBMC-Kodi.cz balíčky ────────────────────────────────────────
+  const xbmc = sources.filter(s => s.type === 'xbmc_pack');
+  if (xbmc.length) {
+    const lbl = document.createElement('span');
+    lbl.className = 'src-section';
+    lbl.textContent = 'XBMC-Kodi.cz';
+    list.appendChild(lbl);
+    for (const src of xbmc) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;';
+
+      const btn = document.createElement('button');
+      btn.className = 'source-btn';
+      btn.style.flex = '1';
+      btn.dataset.name = src.name;
+      btn.innerHTML =
+        `<span class="src-dot" style="background:#e74c3c"></span>` +
+        `<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${src.name}</span>` +
+        `<span class="src-status">${src.count || 0}</span>`;
+      btn.onclick = () => loadGallery(src);
+
+      const refBtn = document.createElement('button');
+      refBtn.className = 'src-refresh-btn';
+      refBtn.title = `Aktualizovat ${src.name} (stáhne nová loga z xbmc-kodi.cz)`;
+      refBtn.textContent = '↻';
+      refBtn.onclick = async e => {
+        e.stopPropagation();
+        refBtn.textContent = '…'; refBtn.disabled = true;
+        try {
+          const res = await fetch('/api/xbmc/refresh', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({pack: src.name})
+          });
+          const d = await res.json();
+          if (d.ok) {
+            refBtn.textContent = '⏳';
+            pollXbmcProgress(src.name, refBtn);
+          } else {
+            refBtn.textContent = '✗';
+            toast('Chyba: ' + (d.error || '?'), 'err');
+            setTimeout(() => { refBtn.textContent='↻'; refBtn.disabled=false; }, 3000);
+          }
+        } catch(_e) {
+          refBtn.textContent = '✗';
+          setTimeout(() => { refBtn.textContent='↻'; refBtn.disabled=false; }, 2000);
+        }
+      };
+
+      row.appendChild(btn);
+      row.appendChild(refBtn);
+      list.appendChild(row);
+    }
+  }
+
+  if (!github.length && !locals.length && !chocho.length && !xbmc.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px">Žádné zdroje.<br>Přidej je přes ⚙ Zdroje.</div>';
+  }
+
+  // Progress bar GitHub prefetche – do footeru
+  if (github.length) {
+    const footer = document.querySelector('.sidebar-footer');
+    let progWrap = document.getElementById('ghPrefetchWrap');
+    if (!progWrap) {
+      progWrap = document.createElement('div');
+      progWrap.id = 'ghPrefetchWrap';
+      progWrap.className = 'gh-prefetch-wrap';
+      if (footer) footer.insertBefore(progWrap, footer.firstChild);
+      else list.appendChild(progWrap);
+    }
+    pollGhPrefetch(progWrap, github);
+  }
+
+  // Auto-select prvního zdroje pokud žádný není aktivní
+  if (!S.gallerySource) {
+    const allSources = [...github, ...locals, ...chocho, ...xbmc];
+    if (allSources.length > 0) {
+      loadGallery(allSources[0]);
+    }
+  }
+}
+
+async function importChocho7z(files) {
+  if (!files || files.length === 0) return;
+
+  const label = document.getElementById('chochoImportLabel');
+  const inp   = document.getElementById('chocho7zInput');
+  const setTxt = t => { if (label) label.childNodes[0].textContent = t; };
+
+  setTxt(`⏳ Nahrávám (${files.length} souborů)…`);
+  if (label) label.style.pointerEvents = 'none';
+
+  const fd = new FormData();
+  for (const f of files) fd.append('archives', f);
+
+  try {
+    const r   = await fetch('/api/chocholousek/import', { method: 'POST', body: fd });
+    const res = await r.json();
+
+    if (!res.ok && res.error) {
+      toast('Import selhal: ' + res.error, 'err');
+      setTxt('📦 Nahrát archiv z picon.cz');
+      if (label) label.style.pointerEvents = '';
+      return;
+    }
+
+    const ok  = res.results ? res.results.filter(r => r.ok) : [];
+    const bad = res.results ? res.results.filter(r => !r.ok) : [];
+    const totalPng = ok.reduce((s, r) => s + (r.extracted || 0), 0);
+
+    if (ok.length > 0) {
+      setTxt(`✅ Importováno ${totalPng} ikon`);
+      toast(`Import OK: ${totalPng} ikon ze ${ok.length} archivů`, 'ok');
+    } else {
+      setTxt('❌ Import selhal');
+      toast('Import selhal: ' + (bad[0]?.error || 'neznámá chyba'), 'err');
+    }
+    if (bad.length > 0) bad.forEach(b => toast(`${b.file}: ${b.error}`, 'err'));
+
+    // Reset tlačítka po 4s
+    setTimeout(() => {
+      setTxt('📦 Nahrát archiv z picon.cz');
+      if (label) label.style.pointerEvents = '';
+      if (inp)   inp.value = '';
+    }, 4000);
+
+  } catch(e) {
+    setTxt('📦 Nahrát archiv z picon.cz');
+    if (label) label.style.pointerEvents = '';
+    toast('Chyba spojení: ' + e.message, 'err');
+  }
+}
+async function pollChochoProgress() {
+  // Stub – polling již nepotřebujeme (styl-list odstraněn)
+}
+
+// ── Gallery state ────────────────────────────────────────────────
+let G = { page: 0, hasMore: false, loading: false, search: '', observer: null, localLogos: [], allRenderedCards: [] };
+
+async function loadGallery(src, reset = true) {
+  if (G.loading) return;
+  G.loading = true;
+
+  document.querySelectorAll('.source-btn').forEach(b => b.classList.toggle('active', b.dataset.name === src.name));
+  S.gallerySource = src;
+
+  const grid   = document.getElementById('galleryGrid');
+  const title  = document.getElementById('galleryTitle');
+  const search = document.getElementById('gallerySearch');
+  const btnRef = document.getElementById('btnGalleryRefresh');
+
+  if (reset) {
+    G.page   = 0;
+    G.search = '';
+    search.value       = '';
+    search.style.display = 'none';
+    btnRef.style.display = 'none';
+    const displayName = src.type === 'chocholousek' ? src.style.replace('picon','') + ' (lokální)' : src.name;
+    title.textContent  = displayName + ' – načítám…';
+    if (G.observer) { G.observer.disconnect(); G.observer = null; }
+    G.loading = false;
+    G.allRenderedCards = [];
+    resetSelectionOnLoad();
+    grid.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+      const ph = document.createElement('div');
+      ph.className = 'logo-card';
+      ph.style.pointerEvents = 'none';
+      ph.innerHTML = '<div class="skel skel-img"></div><div class="skel skel-name"></div>';
+      grid.appendChild(ph);
+    }
+  }
+
+  try {
+    const url = `/api/gallery?source=${encodeURIComponent(src.name)}&page=${G.page}&q=${encodeURIComponent(G.search)}`;
+    const r   = await fetch(url);
+    const data = await r.json();
+
+    if (reset) grid.innerHTML = '';
+
+    G.hasMore = data.has_more;
+    G.page    = data.page + 1;
+
+    title.textContent    = src.name + '  (' + data.total + ' log)';
+    search.style.display = '';
+    btnRef.style.display = '';
+
+    appendLogoCards(grid, data.logos);
+    updateSentinel(grid);
+  } catch(e) {
+    if (reset) grid.innerHTML = `<div class="gallery-empty" style="color:var(--red)">Chyba: ${e.message}</div>`;
+  }
+
+  G.loading = false;
+}
+
+async function loadNextPage() {
+  if (!S.gallerySource || !G.hasMore || G.loading) return;
+  await loadGallery(S.gallerySource, false);
+}
+
+async function refreshGallery() {
+  if (!S.gallerySource) return;
+  // Vymaž server-side cache
+  await fetch('/api/gallery/refresh', { method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ source: S.gallerySource.name }) });
+  loadGallery(S.gallerySource, true);
+}
+
+let searchTimer;
+function filterGallery() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    G.search = document.getElementById('gallerySearch').value.trim();
+    if (!S.gallerySource) return;
+    if (S.gallerySource.type === 'local') {
+      // Filtruj lokálně bez server requestu
+      const q = G.search.toLowerCase();
+      const filtered = q ? (G.localLogos || []).filter(l => l.name.toLowerCase().includes(q)) : (G.localLogos || []);
+      const grid = document.getElementById('galleryGrid');
+      document.getElementById('galleryTitle').textContent = `Lokální soubory (${filtered.length})`;
+      grid.innerHTML = '';
+      appendLogoCards(grid, filtered);
+      updateSentinel(grid);
+    } else {
+      loadGallery(S.gallerySource, true);
+    }
+  }, 350);
+}
+
+function loadCardImage(card) {
+  if (card.dataset.loaded) return;
+  card.dataset.loaded = '1';
+  const img = new Image();
+  img.className = 'card-img';
+  img.onload = function() {
+    const si = card.querySelector('.skel-img'), sn = card.querySelector('.skel-name'), nm = card.querySelector('.logo-name');
+    if (si) si.replaceWith(img);
+    if (sn) sn.remove();
+    if (nm) nm.style.display = '';
+  };
+  img.onerror = function() {
+    const si = card.querySelector('.skel-img'), sn = card.querySelector('.skel-name'), nm = card.querySelector('.logo-name');
+    if (si) { const e = document.createElement('div'); e.className = 'card-img-err'; e.textContent = '?'; si.replaceWith(e); }
+    if (sn) sn.remove();
+    if (nm) nm.style.display = '';
+  };
+  img.src = card.dataset.url;
+}
+
+function appendLogoCards(grid, logos, srcName) {
+  for (const item of logos) {
+    const card = document.createElement('div');
+    card.className = 'logo-card';
+    if (srcName) card.dataset.source = srcName;
+
+    let imgUrl;
+    if (item.local || item._blob) {
+      imgUrl = item.download_url;                          // lokální soubor
+    } else if (item.cached && item.cache_key) {
+      imgUrl = '/api/logo/cached/' + item.cache_key;      // disk cache – nejrychlejší
+    } else if (item.cached) {
+      imgUrl = '/api/logo?url=' + encodeURIComponent(item.download_url);  // cache přes proxy
+    } else {
+      imgUrl = item.download_url;                          // přímo GitHub CDN
+    }
+
+    card.dataset.url = imgUrl;
+    card.innerHTML =
+      '<div class="card-check"></div>' +
+      '<div class="skel skel-img"></div>' +
+      '<div class="skel skel-name"></div>' +
+      '<div class="logo-name" style="display:none">' + item.name.replace('.png','') + '</div>' +
+      '<div class="use-btn">✓ Použít</div>';
+    if (srcName) item._source = srcName;
+    card._multiItem = item;
+    card.onclick = (e) => handleCardClick(item, card, e);
+    card.dataset.idx = G.allRenderedCards.length;
+    G.allRenderedCards.push(card);
+    _restoreCardSelection(card, item);
+    grid.appendChild(card);
+  }
+  // Krátce počkej než se karty vyrenderují, pak spusť lazy load
+  requestAnimationFrame(() => {
+    if (!G.observer) initObserver();
+    grid.querySelectorAll('.logo-card:not([data-observed])').forEach(card => {
+      card.dataset.observed = '1';
+      G.observer.observe(card);
+    });
+  });
+}
+
+function updateSentinel(grid) {
+  const old = document.getElementById('gallerySentinel');
+  if (old) { G.observer && G.observer.unobserve(old); old.remove(); }
+  if (!G.hasMore) return;
+
+  const sentinel = document.createElement('div');
+  sentinel.id = 'gallerySentinel';
+  sentinel.style.cssText = 'height:8px;grid-column:1/-1';
+  grid.appendChild(sentinel);
+  if (!G.observer) initObserver();
+  G.observer.observe(sentinel);
+}
+
+function initObserver() {
+  const root = document.getElementById('galleryGrid');
+  G.observer = new IntersectionObserver(function(entries) {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const el = entry.target;
+
+      // Lazy-load obrázku
+      if (el.classList.contains('logo-card') && el.dataset.url && !el.dataset.loaded) {
+        G.observer.unobserve(el);
+        loadCardImage(el);
+      }
+
+      // Sentinel – načti další stránku
+      if (el.id === 'gallerySentinel') {
+        G.observer.unobserve(el);
+        el.remove();
+        loadNextPage();
+      }
+    }
+  }, { root: root, rootMargin: '0px', threshold: 0.01 });
+}
+
+async function useLogo(item, card) {
+  document.querySelectorAll('.logo-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+
+  const imgEl = card.querySelector('img');
+  if (imgEl.complete && imgEl.naturalWidth > 0) {
+    S.logoImg = imgEl;
+  } else {
+    const img = new Image();
+    img.src = (item.local || item._blob) ? item.download_url : `/api/logo?url=${encodeURIComponent(item.download_url)}`;
+    await new Promise(res => { img.onload = res; img.onerror = res; });
+    S.logoImg = img;
+  }
+
+  toast(`Logo vybráno: ${item.name}`, 'ok');
+  switchTab('editor');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  MULTISELECT – výběr více ikon
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+//  VÝBĚR – přetrvává při přepínání zdrojů
+//  SEL.data  = Map: itemKey → item   (přežívá přepnutí zdroje)
+//  Karty jsou DOM reference – mohou zaniknout, data zůstanou
+// ════════════════════════════════════════════════════════════════════
+const SEL = {
+  data:    new Map(),  // key → item  (klíč = item.name + src)
+  lastIdx: -1,
+};
+
+function _itemKey(item) {
+  return (item.download_url || item.name || '') + '|' + (item._source || '');
+}
+
+function handleCardClick(item, card, e) {
+  const idx = parseInt(card.dataset.idx);
+  const key = _itemKey(item);
+
+  if (e.shiftKey && SEL.lastIdx >= 0 && G.allRenderedCards) {
+    // Shift+klik = rozsah karet aktuálně viditelných v gridu
+    const from = Math.min(SEL.lastIdx, idx);
+    const to   = Math.max(SEL.lastIdx, idx);
+    for (let i = from; i <= to; i++) {
+      const c = G.allRenderedCards[i];
+      if (!c) continue;
+      const k = _itemKey(c._multiItem);
+      if (!SEL.data.has(k)) {
+        SEL.data.set(k, c._multiItem);
+        c.classList.add('selected');
+      }
+    }
+  } else if (SEL.data.has(key)) {
+    // Odznačit
+    SEL.data.delete(key);
+    card.classList.remove('selected');
+  } else {
+    // Přidat
+    SEL.data.set(key, item);
+    card.classList.add('selected');
+    SEL.lastIdx = idx;
+  }
+  updateSelectionBar();
+}
+
+// Volá se po každém appendLogoCards – označí karty které jsou v SEL.data
+function _restoreCardSelection(card, item) {
+  if (SEL.data.has(_itemKey(item))) {
+    card.classList.add('selected');
+  }
+}
+
+function updateSelectionBar() {
+  const bar = document.getElementById('selectionBar');
+  const cnt = document.getElementById('selCount');
+  const n = SEL.data.size;
+  cnt.textContent = n + ' vybráno';
+  bar.style.display = n > 0 ? 'flex' : 'none';
+  // Synchronizuj editor s výběrem
+  if (typeof syncEditorWithSelection === 'function') syncEditorWithSelection();
+}
+
+function clearSelection() {
+  SEL.data.clear();
+  SEL.lastIdx = -1;
+  document.querySelectorAll('.logo-card.selected').forEach(c => c.classList.remove('selected'));
+  updateSelectionBar();
+}
+
+// Při přepnutí zdroje NEMAŽ výběr – jen resetuj karty a lastIdx
+function resetSelectionOnLoad() {
+  SEL.lastIdx = -1;
+  if (G) G.allRenderedCards = [];
+  // Nezasahuj do SEL.data – výběr přetrvává!
+  updateSelectionBar();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  UNIFIED EDITOR – jeden editor pro jednu i více ikon
+// ════════════════════════════════════════════════════════════════════
+// ED = stav unified editoru
+const ED = {
+  items:    [],   // [{item, layout, active, service, logoImg, done}]
+  idx:      0,
+};
+
+// Zavolá se při změně SEL.data (výběr v galerii)
+function syncEditorWithSelection() {
+  const selItems = [...SEL.data.values()];
+  const n = selItems.length;
+
+  // Zachovej existující layout pro ikony které jsou stále vybrané
+  const prevMap = new Map(ED.items.map(m => [_itemKey(m.item), m]));
+
+  ED.items = selItems.map(item => {
+    const key = _itemKey(item);
+    if (prevMap.has(key)) return prevMap.get(key); // zachovej data
+    return {
+      item,
+      layout:  JSON.parse(JSON.stringify(S.layout)),
+      active:  {...S.active},
+      service: S.service,
+      logoImg: null,
+      done:    false,
+    };
+  });
+
+  // Pokud byl aktivní index mimo rozsah, resetuj
+  if (ED.idx >= ED.items.length) ED.idx = Math.max(0, ED.items.length - 1);
+
+  updateEditorFilmstrip();
+  updateEditorNav();
+
+  if (ED.items.length > 0) {
+    loadEditorItem(ED.idx);
+  } else {
+    S.logoImg = null;
+    render();
+  }
+}
+
+// Aktualizuj filmstrip v editoru
+function updateEditorFilmstrip() {
+  const strip  = document.getElementById('editorFilmstrip');
+  const tail   = document.getElementById('edFilmstripTail');
+  const empty  = document.getElementById('edFilmstripEmpty');
+  const badge  = document.getElementById('edSelBadge');
+  const n = ED.items.length;
+
+  strip.querySelectorAll('.ed-thumb').forEach(t => t.remove());
+
+  if (n === 0) {
+    tail.style.display  = 'none';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  tail.style.display  = 'flex';
+  badge.textContent   = n + (n === 1 ? ' ikona' : n < 5 ? ' ikony' : ' ikon');
+
+  ED.items.forEach((m, i) => {
+    const th = document.createElement('div');
+    th.className = 'ed-thumb' + (i === ED.idx ? ' active' : '');
+    th.dataset.i = i;
+
+    const img = document.createElement('img');
+    const it = m.item;
+    img.src = (it.local || it._blob) ? it.download_url : `/api/logo?url=${encodeURIComponent(it.download_url)}`;
+    img.onerror = () => { img.style.display = 'none'; };
+
+    const nm = document.createElement('span');
+    nm.className = 'ed-name';
+    nm.textContent = it.name.replace('.png', '');
+
+    if (m.done) {
+      const ck = document.createElement('div');
+      ck.style.cssText = 'position:absolute;top:3px;right:3px;width:14px;height:14px;background:var(--green);border-radius:50%;font-size:9px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:900';
+      ck.textContent = '✓';
+      th.appendChild(ck);
+    }
+
+    th.appendChild(img);
+    th.appendChild(nm);
+    th.onclick = () => { _saveCurrentEditorState(); loadEditorItem(i); };
+    strip.insertBefore(th, tail);
+  });
+}
+
+// Aktualizuj navigační šipky a "aplikovat na vše"
+function updateEditorNav() {
+  const n   = ED.items.length;
+  const nav = document.getElementById('edNav');
+  const secApply = document.getElementById('secApplyAll');
+  const btnExAll = document.getElementById('btnExportAll');
+  const multi = n > 1;
+  if (nav)     nav.style.display      = multi ? 'flex' : 'none';
+  if (secApply) secApply.style.display = multi ? ''     : 'none';
+  if (btnExAll) btnExAll.style.display = multi ? ''     : 'none';
+
+  if (multi) {
+    document.getElementById('edBtnPrev').disabled = ED.idx === 0;
+    document.getElementById('edBtnNext').disabled = ED.idx === n - 1;
+    document.getElementById('edProgress').textContent = `${ED.idx + 1} / ${n}`;
+  }
+}
+
+async function loadEditorItem(idx) {
+  if (idx < 0 || idx >= ED.items.length) return;
+  ED.idx = idx;
+
+  // Zvýrazni thumb
+  document.querySelectorAll('.ed-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+  updateEditorNav();
+
+  const m = ED.items[idx];
+
+  // Načti layout/active/service do S (globální stav editoru)
+  S.layout  = JSON.parse(JSON.stringify(m.layout));
+  S.active  = {...m.active};
+  S.service = m.service;
+
+  // Synchronizuj UI
+  const sel = document.getElementById('serviceSelect');
+  if (sel) sel.value = S.service;
+  buildBadgeList();
+  S.selBadge = null;
+  syncPropsPanel();
+
+  // Načti logo
+  if (!m.logoImg) {
+    const it = m.item;
+    const src = (it.local || it._blob) ? it.download_url : `/api/logo?url=${encodeURIComponent(it.download_url)}`;
+    const img = new Image();
+    img.src = src;
+    await new Promise(res => { img.onload = res; img.onerror = res; });
+    m.logoImg = img;
+  }
+  S.logoImg = m.logoImg;
+  _updateLogoThumb(m.item.name, m.logoImg);
+
+  // Nastav publish filename
+
+  render();
+}
+
+function edNavigate(dir) {
+  const next = ED.idx + dir;
+  if (next >= 0 && next < ED.items.length) {
+    // Ulož aktuální layout před přechodem
+    _saveCurrentEditorState();
+    loadEditorItem(next);
+  }
+}
+
+function _saveCurrentEditorState() {
+  if (ED.items.length === 0) return;
+  const m = ED.items[ED.idx];
+  m.layout  = JSON.parse(JSON.stringify(S.layout));
+  m.active  = {...S.active};
+  m.service = S.service;
+  m.done    = true;
+  // Aktualizuj ✓ na thumbu
+  const thumb = document.querySelector(`.ed-thumb[data-i="${ED.idx}"]`);
+  if (thumb) thumb.classList.add('done');
+}
+
+function applyLayoutToAll() {
+  _saveCurrentEditorState();
+  const src = ED.items[ED.idx];
+  ED.items.forEach((m, i) => {
+    if (i !== ED.idx) m.layout = JSON.parse(JSON.stringify(src.layout));
+  });
+  toast('Rozložení aplikováno na všechny', 'ok');
+}
+
+function applyBadgesToAll() {
+  _saveCurrentEditorState();
+  const src = ED.items[ED.idx];
+  ED.items.forEach((m, i) => {
+    if (i !== ED.idx) m.active = {...src.active};
+  });
+  toast('Badges aplikovány na všechny', 'ok');
+}
+
+function edExportCurrent() {
+  _saveCurrentEditorState();
+  const m = ED.items.length > 0 ? ED.items[ED.idx] : null;
+  if (!m && !S.logoImg) { toast('Žádné logo', 'err'); return; }
+  const a = document.createElement('a');
+  a.download = m ? m.item.name : 'picon.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+function edExportAll() {
+  _saveCurrentEditorState();
+  const allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
+  ED.items.forEach((m, i) => {
+    const tmpC = document.createElement('canvas');
+    tmpC.width = W; tmpC.height = H;
+    const tc = tmpC.getContext('2d');
+    if (m.logoImg) _drawLogo(tc, m.logoImg, W, H);
+    for (const bt of allIds) {
+      if (!m.active[bt]) continue;
+      const l = m.layout[bt]; if (!l) continue;
+      const img = S.badgeImgs[bt];
+      const bw = (img ? img.naturalWidth : 52) * l.scale;
+      const bh = (img ? img.naturalHeight : 22) * l.scale;
+      tc.save(); tc.globalAlpha = l.opacity;
+      tc.translate(l.x + bw/2, l.y + bh/2); tc.rotate(l.rotation * Math.PI / 180);
+      if (img) tc.drawImage(img, -bw/2, -bh/2, bw, bh);
+      tc.restore();
+    }
+    const a = document.createElement('a');
+    a.download = m.item.name;
+    a.href = tmpC.toDataURL('image/png');
+    setTimeout(() => a.click(), i * 80);
+  });
+  toast(`Exportuji ${ED.items.length} souborů…`, 'ok');
+}
+
+async function edPushCurrent() {
+  _saveCurrentEditorState();
+  const filename = ED.items[ED.idx]?.item.name || 'picon.png';
+  if (!filename) { toast('Chybí název souboru', 'err'); return; }
+  const png_b64 = canvas.toDataURL('image/png').split(',')[1];
+  try {
+    const r = await fetch('/api/publish', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({png_base64: png_b64, filename})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast('Pushnut na GitHub ✓', 'ok');
+      if (ED.items.length > 0) ED.items[ED.idx].done = true;
+      updateEditorFilmstrip();
+    } else {
+      toast('Chyba: ' + d.error, 'err');
+    }
+  } catch(e) { toast('Chyba spojení', 'err'); }
+}
+
+async function edPushAll() {
+  _saveCurrentEditorState();
+  const log = null;
+  let ok = 0, fail = 0;
+  const allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
+  for (const m of ED.items) {
+    const tmpC = document.createElement('canvas');
+    tmpC.width = W; tmpC.height = H;
+    const tc = tmpC.getContext('2d');
+    if (m.logoImg) _drawLogo(tc, m.logoImg, W, H);
+    for (const bt of allIds) {
+      if (!m.active[bt]) continue;
+      const l = m.layout[bt]; if (!l) continue;
+      const img = S.badgeImgs[bt];
+      const bw = (img ? img.naturalWidth : 52) * l.scale;
+      const bh = (img ? img.naturalHeight : 22) * l.scale;
+      tc.save(); tc.globalAlpha = l.opacity;
+      tc.translate(l.x + bw/2, l.y + bh/2); tc.rotate(l.rotation * Math.PI / 180);
+      if (img) tc.drawImage(img, -bw/2, -bh/2, bw, bh);
+      tc.restore();
+    }
+    const png_b64 = tmpC.toDataURL('image/png').split(',')[1];
+    try {
+      const r = await fetch('/api/publish', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({png_base64: png_b64, filename: m.item.name})
+      });
+      const d = await r.json();
+      if (d.ok) { ok++; m.done = true; if (log) log.innerHTML += `<div style="color:var(--green)">✓ ${m.item.name}</div>`; }
+      else       { fail++; if (log) log.innerHTML += `<div style="color:var(--red)">✗ ${m.item.name}: ${d.error}</div>`; }
+    } catch(e)   { fail++; if (log) log.innerHTML += `<div style="color:var(--red)">✗ ${m.item.name}</div>`; }
+    if (log) log.scrollTop = log.scrollHeight;
+  }
+  updateEditorFilmstrip();
+  toast(`Push: ${ok} OK, ${fail} chyb`, fail > 0 ? 'err' : 'ok');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  EDITOR – Canvas
+// ════════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+
+
+function _updateLogoThumb(name, img) {
+  const wrap = document.getElementById('insertedLogoWrap');
+  const tc   = document.getElementById('logoThumb');
+  const nm   = document.getElementById('insertedLogoName');
+  if (!wrap || !tc) return;
+  if (!img) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  if (nm) nm.textContent = (name || '').replace('.png','');
+  const ctx2 = tc.getContext('2d');
+  ctx2.clearRect(0,0,88,88);
+  const iw = img.naturalWidth || img.width || 88;
+  const ih = img.naturalHeight || img.height || 88;
+  const sc = Math.min(88/iw, 88/ih);
+  const dw = Math.round(iw*sc), dh = Math.round(ih*sc);
+  ctx2.drawImage(img, Math.round((88-dw)/2), Math.round((88-dh)/2), dw, dh);
+}
+
+// Vykreslí logo na canvas – contain (fit s paddingem) nebo stretch
+function _drawLogo(ctx, img, w, h) {
+  const stretch  = document.getElementById('chkStretch')?.checked;
+  const autoBg   = document.getElementById('chkAutoBg')?.checked;
+
+  if (stretch) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, w, h);
+    return;
+  }
+
+  const iw = img.naturalWidth  || img.width  || w;
+  const ih = img.naturalHeight || img.height || h;
+
+  // Nikdy neupscaluj — pouze downscale pokud je logo větší než canvas
+  const scale = Math.min(1, w / iw, h / ih);
+  const dw = Math.round(iw * scale);
+  const dh = Math.round(ih * scale);
+  const dx = Math.round((w - dw) / 2);
+  const dy = Math.round((h - dh) / 2);
+
+  // Auto-background: detekuj barvu rohu picony a vyplň pozadí
+  if (autoBg) {
+    const bg = _detectLogoBgColor(img, iw, ih);
+    if (bg) {
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+    }
+  }
+
+  // Při downscale (logo > canvas) jemné smoothing, jinak vypni
+  ctx.imageSmoothingEnabled = scale < 1;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, dx, dy, dw, dh);
+  ctx.imageSmoothingEnabled = true; // reset pro badges
+}
+
+function _detectLogoBgColor(img, iw, ih) {
+  // Načti rohové pixely z obrázku do temp canvas a průměruj
+  try {
+    const tmp = document.createElement('canvas');
+    tmp.width = iw; tmp.height = ih;
+    const tc = tmp.getContext('2d');
+    tc.drawImage(img, 0, 0);
+    const size = Math.max(2, Math.round(Math.min(iw, ih) * 0.08));
+    // Vzorkuj 4 rohy
+    const corners = [
+      tc.getImageData(0, 0, size, size),
+      tc.getImageData(iw - size, 0, size, size),
+      tc.getImageData(0, ih - size, size, size),
+      tc.getImageData(iw - size, ih - size, size, size),
+    ];
+    let r = 0, g = 0, b = 0, a = 0, n = 0;
+    for (const id of corners) {
+      for (let i = 0; i < id.data.length; i += 4) {
+        r += id.data[i]; g += id.data[i+1]; b += id.data[i+2]; a += id.data[i+3];
+        n++;
+      }
+    }
+    a /= n;
+    if (a < 20) return null; // průhledné rohy – nevyplňuj
+    r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
+    return `rgb(${r},${g},${b})`;
+  } catch(e) {
+    return null; // cross-origin nebo jiná chyba
+  }
+}
+
+function render() {
+  // Ujisti se že canvas má správnou CSS velikost
+  const cv = document.getElementById('canvas');
+  if (cv && (parseInt(cv.style.width) < 10 || !cv.style.width)) _resizeCanvases();
+  ctx.clearRect(0, 0, W, H);
+
+  if (S.logoImg) {
+    _drawLogo(ctx, S.logoImg, W, H);
+  } else {
+    ctx.fillStyle = '#1c2035';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#3a4060';
+    ctx.font = '13px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('[ vyberte logo v galerii ]', W/2, H/2);
+  }
+
+  // Vykresli všechny aktivní overlay vrstvy
+  const activeIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
+  for (const bt of activeIds) {
+    if (!S.active[bt]) continue;
+    const l   = S.layout[bt];
+    const img = S.badgeImgs[bt];
+    const bw  = (img ? img.naturalWidth  : 52) * l.scale;
+    const bh  = (img ? img.naturalHeight : 22) * l.scale;
+
+    ctx.save();
+    ctx.globalAlpha = l.opacity;
+    ctx.translate(l.x + bw/2, l.y + bh/2);
+    ctx.rotate(l.rotation * Math.PI / 180);
+    if (img) {
+      ctx.drawImage(img, -bw/2, -bh/2, bw, bh);
+    } else {
+      ctx.fillStyle = BADGE_COLORS[bt];
+      ctx.beginPath();
+      ctx.roundRect(-bw/2, -bh/2, bw, bh, 4*l.scale);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${Math.max(7, 10*l.scale)}px Segoe UI`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(bt.toUpperCase(), 0, 0);
+    }
+    ctx.restore();
+
+    if (S.selBadge === bt) {
+      ctx.save();
+      ctx.strokeStyle = '#5b8def';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4,3]);
+      ctx.strokeRect(l.x-2, l.y-2, bw+4, bh+4);
+      ctx.restore();
+    }
+  }
+}
+
+function badgeHitTest(mx, my) {
+  const _allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
+  for (const bt of [..._allIds].reverse()) {
+    if (!S.active[bt]) continue;
+    const l = S.layout[bt];
+    const img = S.badgeImgs[bt];
+    const bw = (img ? img.naturalWidth  : 52) * l.scale;
+    const bh = (img ? img.naturalHeight : 22) * l.scale;
+    if (mx>=l.x && mx<=l.x+bw && my>=l.y && my<=l.y+bh) return bt;
+  }
+  return null;
+}
+
+canvas.addEventListener('mousedown', e => {
+  const r = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / r.width;
+  const scaleY = canvas.height / r.height;
+  const mx = (e.clientX-r.left)*scaleX;
+  const my = (e.clientY-r.top)*scaleY;
+  const bt = badgeHitTest(mx, my);
+  if (bt) {
+    S.selBadge = bt;
+    const l = S.layout[bt];
+    S.drag = { bt, offX: mx-l.x, offY: my-l.y };
+    syncPropsPanel(); buildBadgeList(); render();
+  }
+});
+canvas.addEventListener('mousemove', e => {
+  if (!S.drag) return;
+  const r = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / r.width;
+  const scaleY = canvas.height / r.height;
+  const mx = (e.clientX-r.left)*scaleX;
+  const my = (e.clientY-r.top)*scaleY;
+  const l  = S.layout[S.drag.bt];
+  l.x = Math.round(Math.max(0, Math.min(W-10, mx-S.drag.offX)));
+  l.y = Math.round(Math.max(0, Math.min(H-10, my-S.drag.offY)));
+  syncPropsPanel(); render();
+});
+canvas.addEventListener('mouseup',    () => S.drag = null);
+canvas.addEventListener('mouseleave', () => S.drag = null);
+
+// ════════════════════════════════════════════════════════════════════
+//  EDITOR – Badge list & props
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+//  OVERLAY VRSTVA – dynamický seznam nahraných PNG vrstev
+// ════════════════════════════════════════════════════════════════════
+// OV = { id, name, img, dataUrl }  — nahraná vrstva
+// S.active[id] = true/false — je vrstva aktivní
+// S.layout[id] = {x,y,scale,rotation,opacity}
+// S.selBadge   = id aktivně editované vrstvy
+
+const OV_LAYERS = [];  // pole {id, name, img, dataUrl}
+
+function _ovId(name) {
+  return 'ov_' + name.replace(/[^\w]/g, '_');
+}
+
+function _ovDefaultLayout() {
+  return {x: 0, y: 0, scale: 1, rotation: 0, opacity: 1};
+}
+
+// Přidej novou vrstvu
+function addOverlayLayer(name, dataUrl) {
+  const id = _ovId(name);
+  if (OV_LAYERS.find(o => o.id === id)) return; // dedupe
+  const img = new Image();
+  img.onload = () => {
+    OV_LAYERS.push({id, name, label: name.replace(/\.png$/i,''), img, dataUrl});
+    if (!S.layout[id]) S.layout[id] = _ovDefaultLayout();
+    S.active[id] = false;
+    S.badgeImgs[id] = img;
+    buildOverlayList();
+    _buildOverlaySelect();
+  };
+  img.src = dataUrl;
+}
+
+// Odstraň vrstvu
+function removeOverlayLayer(id) {
+  const idx = OV_LAYERS.findIndex(o => o.id === id);
+  if (idx >= 0) OV_LAYERS.splice(idx, 1);
+  delete S.active[id];
+  delete S.layout[id];
+  delete S.badgeImgs[id];
+  if (S.selBadge === id) { S.selBadge = null; syncPropsPanel(); }
+  buildOverlayList();
+  _buildOverlaySelect();
+  render();
+}
+
+// Odeber aktivní vrstvu z canvasu (nezmaže z knihovny)
+function removeActiveOverlay() {
+  if (!S.selBadge) return;
+  S.active[S.selBadge] = false;
+  S.selBadge = null;
+  syncPropsPanel();
+  document.getElementById('overlaySelect').value = '';
+  render();
+}
+
+// Sestav seznam vrstev v levém sloupci
+function buildOverlayList() {
+  const wrap = document.getElementById('overlayListWrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  OV_LAYERS.forEach(ov => {
+    const item = document.createElement('div');
+    item.className = 'overlay-item' + (S.active[ov.id] ? ' active' : '');
+    item.dataset.id = ov.id;
+
+    const thumb = document.createElement('img');
+    thumb.src = ov.dataUrl;
+
+    const nm = document.createElement('span');
+    nm.className = 'ov-name';
+    nm.textContent = ov.label || ov.name.replace(/\.png$/i, '');
+    nm.title = ov.label || ov.name;
+
+    const del = document.createElement('span');
+    del.className = 'ov-del';
+    del.textContent = '✕';
+    del.title = 'Odebrat z knihovny';
+    del.onclick = e => { e.stopPropagation(); removeOverlayLayer(ov.id); };
+
+    item.appendChild(thumb); item.appendChild(nm); item.appendChild(del);
+    item.onclick = () => {
+      S.active[ov.id] = !S.active[ov.id];
+      if (S.active[ov.id]) {
+        S.selBadge = ov.id;
+        document.getElementById('overlaySelect').value = ov.id;
+      } else if (S.selBadge === ov.id) {
+        S.selBadge = null;
+        document.getElementById('overlaySelect').value = '';
+      }
+      buildOverlayList();
+      syncPropsPanel();
+      render();
+    };
+    wrap.appendChild(item);
+  });
+}
+
+// Sestav roletku v pravém panelu
+function _buildOverlaySelect() {
+  const sel = document.getElementById('overlaySelect');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— žádná vrstva —</option>';
+  OV_LAYERS.forEach(ov => {
+    const opt = document.createElement('option');
+    opt.value = ov.id; opt.textContent = ov.label || ov.name.replace(/\.png$/i, '');
+    sel.appendChild(opt);
+  });
+  if (cur && OV_LAYERS.find(o => o.id === cur)) sel.value = cur;
+}
+
+// Výběr vrstvy v roletce
+function onOverlaySelect() {
+  const id = document.getElementById('overlaySelect').value;
+  S.selBadge = id || null;
+  if (id && !S.active[id]) { S.active[id] = true; buildOverlayList(); render(); }
+  syncPropsPanel();
+  // Zobraz/skryj pole pro název
+  const nameWrap = document.getElementById('overlayNameWrap');
+  const nameInp  = document.getElementById('overlayNameInput');
+  if (nameWrap) nameWrap.style.display = id ? '' : 'none';
+  if (nameInp && id) {
+    const ov = OV_LAYERS.find(o => o.id === id);
+    nameInp.value = ov ? ov.label || ov.name.replace(/\.png$/i,'') : '';
+  }
+}
+
+// Přejmenuj element (label pro zobrazení)
+function renameCurrentOverlay(val) {
+  if (!S.selBadge) return;
+  const ov = OV_LAYERS.find(o => o.id === S.selBadge);
+  if (ov) {
+    ov.label = val;
+    // Aktualizuj název v roletce a seznamu
+    const opt = document.querySelector(`#overlaySelect option[value="${S.selBadge}"]`);
+    if (opt) opt.textContent = val || ov.name.replace(/\.png$/i,'');
+    const nm = document.querySelector(`.overlay-item[data-id="${S.selBadge}"] .ov-name`);
+    if (nm) nm.textContent = val || ov.name.replace(/\.png$/i,'');
+    nm && (nm.title = val || ov.name);
+  }
+}
+
+// Upload vrstev
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('overlayUploadInput');
+  if (inp) inp.addEventListener('change', e => {
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => addOverlayLayer(file.name, ev.target.result);
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  });
+});
+
+// Zpětná kompatibilita — buildBadgeList nyní volá buildOverlayList
+function buildBadgeList() { buildOverlayList(); }
+
+function syncPropsPanel() {
+  const bt = S.selBadge;
+  document.getElementById('noBadgeSel').classList.toggle('hidden', !!bt);
+  document.getElementById('propsPanel').classList.toggle('hidden', !bt);
+  if (!bt) return;
+  if (!S.layout[bt]) S.layout[bt] = _ovDefaultLayout();
+  const l = S.layout[bt];
+  document.getElementById('pX').value        = Math.round(l.x);
+  document.getElementById('pY').value        = Math.round(l.y);
+  document.getElementById('pScale').value    = Math.round(l.scale*100);
+  document.getElementById('pRotation').value = Math.round(l.rotation);
+  document.getElementById('pOpacity').value  = Math.round(l.opacity*100);
+  document.getElementById('vScale').textContent    = Math.round(l.scale*100)+'%';
+  document.getElementById('vRotation').textContent = Math.round(l.rotation)+'°';
+  document.getElementById('vOpacity').textContent  = Math.round(l.opacity*100)+'%';
+  // Zobraz název pole pro overlay
+  const nameWrap = document.getElementById('overlayNameWrap');
+  const nameInp  = document.getElementById('overlayNameInput');
+  const isOv = bt && bt.startsWith('ov_');
+  if (nameWrap) nameWrap.style.display = isOv ? '' : 'none';
+  if (nameInp && isOv) {
+    const ov = OV_LAYERS.find(o => o.id === bt);
+    if (ov) nameInp.value = ov.label || ov.name.replace(/\.png$/i,'');
+  }
+}
+
+function sliderChange() {
+  if (!S.selBadge) return;
+  const l = S.layout[S.selBadge];
+  l.scale    = parseFloat(document.getElementById('pScale').value)/100;
+  l.rotation = parseFloat(document.getElementById('pRotation').value);
+  l.opacity  = parseFloat(document.getElementById('pOpacity').value)/100;
+  document.getElementById('vScale').textContent    = Math.round(l.scale*100)+'%';
+  document.getElementById('vRotation').textContent = Math.round(l.rotation)+'°';
+  document.getElementById('vOpacity').textContent  = Math.round(l.opacity*100)+'%';
+  render();
+}
+
+function propsToState() {
+  if (!S.selBadge) return;
+  S.layout[S.selBadge].x = parseInt(document.getElementById('pX').value)||0;
+  S.layout[S.selBadge].y = parseInt(document.getElementById('pY').value)||0;
+  render();
+}
+
+function resetBadge() {
+  if (!S.selBadge) return;
+  S.layout[S.selBadge] = S.selBadge.startsWith('ov_')
+    ? _ovDefaultLayout()
+    : {...DEF_LAYOUT[S.selBadge]};
+  syncPropsPanel(); render();
+}
+
+function resetAll() {
+  S.layout = JSON.parse(JSON.stringify(DEF_LAYOUT));
+  syncPropsPanel(); render(); toast('Reset všech badges','inf');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  EDITOR – Service select
+// ════════════════════════════════════════════════════════════════════
+function buildServiceSelect() {
+  const sel = document.getElementById('serviceSelect');
+  const cur = sel.value || S.service;
+  sel.innerHTML = '';
+  for (const svc of SERVICES) {
+    const opt = document.createElement('option');
+    opt.value = svc; opt.textContent = svc;
+    if (svc === cur) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function onServiceChange() {
+  S.service = document.getElementById('serviceSelect').value;
+  // Ulož do aktuální ED položky
+  if (ED.items[ED.idx]) ED.items[ED.idx].service = S.service;
+}
+
+// ── Správa poskytovatelů ──────────────────────────────────────────
+function showAddProvider() {
+  document.getElementById('addProviderForm').style.display = '';
+  document.getElementById('newProviderName').focus();
+}
+function hideAddProvider() {
+  document.getElementById('addProviderForm').style.display = 'none';
+  const inp = document.getElementById('newProviderName');
+  if (inp) { inp.value = ''; inp.blur(); }
+}
+
+// ── Přidání pojmenované grafické vrstvy ──────────────────────────
+function showAddOverlay() {
+  const form = document.getElementById('addOverlayForm');
+  if (!form) return;
+  form.style.display = '';
+  document.getElementById('newOverlayName').focus();
+}
+function hideAddOverlay() {
+  const form = document.getElementById('addOverlayForm');
+  if (!form) return;
+  form.style.display = 'none';
+  document.getElementById('newOverlayName').value = '';
+  document.getElementById('newOverlayFileName').textContent = '';
+  document.getElementById('newOverlayFile').value = '';
+}
+function addNamedOverlay() {
+  const nameInp = document.getElementById('newOverlayName');
+  const fileInp = document.getElementById('newOverlayFile');
+  const name = (nameInp?.value || '').trim();
+  if (!name) { toast('Zadej název vrstvy', 'err'); return; }
+  if (fileInp?.files?.length) {
+    // Soubor vybrán → načti ho
+    const file = fileInp.files[0];
+    const reader = new FileReader();
+    reader.onload = ev => {
+      addOverlayLayer(name.endsWith('.png') ? name : name + '.png', ev.target.result);
+      hideAddOverlay();
+      toast(`Vrstva „${name}" přidána`, 'ok');
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // Bez souboru → přidej prázdnou vrstvu s placeholder
+    toast('Vyber PNG soubor pro vrstvu', 'err');
+  }
+}
+
+
+async function addProvider() {
+  const name = document.getElementById('newProviderName').value.trim();
+  if (!name) { toast('Zadej název poskytovatele', 'err'); return; }
+  if (SERVICES.includes(name)) { toast('Poskytovatel již existuje', 'err'); return; }
+  try {
+    const r = await fetch('/api/services/add', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name})
+    });
+    const d = await r.json();
+    if (!d.ok) { toast('Chyba: ' + d.error, 'err'); return; }
+    // Načti aktuální seznam ze serveru
+    await _reloadServices(name);
+    hideAddProvider();
+    toast('"' + name + '" přidán', 'ok');
+  } catch(e) { toast('Chyba spojení: ' + e, 'err'); }
+}
+
+async function _reloadServices(selectName) {
+  try {
+    const r = await fetch('/api/config');
+    const d = await r.json();
+    if (d.services && d.services.length > 0) {
+      SERVICES.length = 0;
+      d.services.forEach(s => SERVICES.push(s));
+    }
+  } catch(e) {}
+  if (selectName) S.service = selectName;
+  buildServiceSelect();
+}
+
+async function deleteCurrentProvider() {
+  const name = document.getElementById('serviceSelect').value;
+  if (!name) return;
+  if (!confirm(`Smazat poskytovatele "${name}"? Tuto akci nelze vrátit.`)) return;
+  try {
+    const r = await fetch('/api/services/remove', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name})
+    });
+    const d = await r.json();
+    if (!d.ok) { toast('Chyba: ' + d.error, 'err'); return; }
+    await _reloadServices(SERVICES.find(s => s !== name) || '');
+    toast('"' + name + '" smazán', 'ok');
+  } catch(e) { toast('Chyba spojení', 'err'); }
+}
+
+
+
+// ════════════════════════════════════════════════════════════════════
+//  EDITOR – Upload loga a badge
+// ════════════════════════════════════════════════════════════════════
+document.getElementById('fileInput').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!S.selBadge) { toast('Nejdřív vyber příznak!', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { S.badgeImgs[S.selBadge] = img; render(); toast(`Badge ${S.selBadge} načten`, 'ok'); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+};
+
+document.getElementById('logoInput').onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { S.logoImg = img; render(); toast('Logo načteno', 'ok'); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+};
+
+function loadLogoFromUrl() {
+  const url = document.getElementById('logoUrlInput').value.trim();
+  if (!url) return;
+  const full = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? url : '/picons/'+url);
+  const img = new Image();
+  img.onload  = () => { S.logoImg = img; render(); toast('Logo načteno', 'ok'); };
+  img.onerror = () => toast('Nelze načíst logo', 'err');
+  img.src = full + '?t=' + Date.now();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  EDITOR – Save layout & export
+// ════════════════════════════════════════════════════════════════════
+async function saveLayout() {
+  _saveCurrentEditorState();
+
+  try {
+    const r    = await fetch('/api/editor/save', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({service: S.service, layout: S.layout})
+    });
+    const data = await r.json();
+    data.ok ? toast(`Layout uložen (${S.service})`, 'ok') : toast('Chyba: '+data.error, 'err');
+  } catch(e) { toast('Chyba spojení', 'err'); }
+}
+
+function exportPng() {
+  const a = document.createElement('a');
+  a.download = `picon_${S.service}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+function exportJson() {
+  const blob = new Blob([JSON.stringify(S.layout,null,2)], {type:'application/json'});
+  const a    = document.createElement('a');
+  a.download = `layout_${S.service}.json`;
+  a.href     = URL.createObjectURL(blob);
+  a.click();
+}
+
+function goPublish() { switchTab('github'); }
+
+// ════════════════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = (type==='ok'?'✓ ':type==='err'?'✗ ':'ℹ ') + msg;
+  el.className   = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className='', 3000);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  INIT CONFIG ze serveru
+// ════════════════════════════════════════════════════════════════════
+async function initConfig() {
+  try {
+    const ac = new AbortController();
+    setTimeout(() => ac.abort(), 3000); // 3s max
+    const r   = await fetch('/api/config', { signal: ac.signal });
+    const cfg = await r.json();
+    W = cfg.picon.width;
+    H = cfg.picon.height;
+  } catch(e) {
+    console.warn('Nelze načíst config ze serveru, použity výchozí hodnoty 220x132');
+  }
+  // Nastav canvas rozměry + CSS škálování aby se vešel na obrazovku
+  const cv = document.getElementById('canvas');
+  cv.width  = W;
+  cv.height = H;
+  // multiCanvas – stejné rozměry
+  multiCanvas.width  = W;
+  multiCanvas.height = H;
+  // CSS scale – canvas zůstane v pixelech W×H ale vizuálně se smrskne
+  const maxW = window.innerWidth  - 560;   // minus levý + pravý panel
+  const maxH = window.innerHeight - 180;   // minus header + padding
+  const scale = Math.min(1, maxW / W, maxH / H);
+  cv.style.width  = Math.round(W * scale) + 'px';
+  cv.style.height = Math.round(H * scale) + 'px';
+  multiCanvas.style.width  = Math.round(W * scale) + 'px';
+  multiCanvas.style.height = Math.round(H * scale) + 'px';
+  // Aktualizuj label a pos input max hodnoty
+  const lbl = document.getElementById('canvasLabel');
+  if (lbl) lbl.textContent = W + ' x ' + H + ' px  •  táhni badge myší';
+
+  const pxi = document.getElementById('pX');
+  const pyi = document.getElementById('pY');
+  if (pxi) pxi.max = W;
+  if (pyi) pyi.max = H;
+  _syncSizePicker();
+  // Načti seznam poskytovatelů ze serveru
+  try {
+    const _sr = await fetch('/api/config');
+    const _sc = await _sr.json();
+    if (_sc.services && _sc.services.length > 0) {
+      SERVICES.length = 0;
+      _sc.services.forEach(s => SERVICES.push(s));
+    }
+  } catch(e) {}
+  buildServiceSelect();
+  // Přepočítej výchozí layout pozice na nové rozměry (poměrově)
+  const scaleX = W / 220;
+  const scaleY = H / 132;
+  for (const bt of BADGE_TYPES) {
+    DEF_LAYOUT[bt].x = Math.round(DEF_LAYOUT[bt].x * scaleX);
+    DEF_LAYOUT[bt].y = Math.round(DEF_LAYOUT[bt].y * scaleY);
+    S.layout[bt].x   = DEF_LAYOUT[bt].x;
+    S.layout[bt].y   = DEF_LAYOUT[bt].y;
+  }
+}
+
+// ── Size picker ──────────────────────────────────────────────────
+// onSizePreset replaced by quickSize + pills
+
+async function applySize() {
+  let w = parseInt(document.getElementById('sizeW').value);
+  let h = parseInt(document.getElementById('sizeH').value);
+  if (!w || !h || w < 16 || h < 16) { toast('Neplatné rozměry', 'err'); return; }
+
+  try {
+    const r = await fetch('/api/config/size', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({width: w, height: h})
+    });
+    const d = await r.json();
+    if (!d.ok) { toast('Chyba: ' + d.error, 'err'); return; }
+  } catch(e) { toast('Chyba spojení', 'err'); return; }
+
+  // Lokálně přenastaví canvas bez reloadu
+  W = w; H = h;
+  _resizeCanvases();
+  toast(`Rozlišení: ${w}×${h} px`, 'ok');
+}
+
+function _resizeCanvases() {
+  const edCenter = document.querySelector('.editor-center');
+  if (edCenter && edCenter.clientWidth === 0) { requestAnimationFrame(_resizeCanvases); return; }
+  const padding  = 80; // prostor pro label a nav
+  const maxW = (edCenter ? edCenter.clientWidth  : window.innerWidth  - 300) - 40;
+  const maxH = (edCenter ? edCenter.clientHeight : window.innerHeight - 200) - padding;
+  // Vždy fituj canvas do dostupné plochy — scale UP i DOWN
+  const scale = Math.min(maxW / W, maxH / H);
+
+  const cv = document.getElementById('canvas');
+  cv.width = W; cv.height = H;
+  const cssW = Math.round(W * scale);
+  const cssH = Math.round(H * scale);
+  cv.style.width  = cssW + 'px';
+  cv.style.height = cssH + 'px';
+  // imageRendering: pixelated při upscale malého loga, smooth při downscale
+  cv.style.imageRendering = scale > 1 ? 'pixelated' : 'auto';
+
+
+
+
+  const lbl = document.getElementById('canvasLabel');
+  if (lbl) lbl.textContent = W + ' x ' + H + ' px  •  táhni badge myší';
+
+
+  render();
+
+}
+
+window.addEventListener('resize', _resizeCanvases);
+
+function _syncSizePicker() {
+  document.getElementById('sizeW').value = W;
+  document.getElementById('sizeH').value = H;
+  document.querySelectorAll('.size-pill').forEach(p => {
+    p.classList.toggle('active', parseInt(p.dataset.w)===W && parseInt(p.dataset.h)===H);
+  });
+}
+
+function quickSize(pill) {
+  document.getElementById('sizeW').value = pill.dataset.w;
+  document.getElementById('sizeH').value = pill.dataset.h;
+  applySize();
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+//  LOG PANEL
+// ════════════════════════════════════════════════════════════════════
+const LOG_MAX = 500;
+let _logLines = 0;
+let _logPollTimer = null;
+
+function toggleLog() {
+  const p = document.getElementById('logPanel');
+  p.classList.toggle('collapsed');
+}
+
+function _logLevel(text) {
+  const t = text.toLowerCase();
+  if (t.includes('chyba') || t.includes('error') || t.includes('failed') || t.includes('traceback')) return 'err';
+  if (t.includes('warning') || t.includes('warn'))   return 'warn';
+  if (t.includes('png') || t.includes('ok') || t.includes('dokončen') || t.includes('stažen')) return 'ok';
+  if (t.includes('[chocho') || t.includes('[github') || t.includes('[cache') || t.includes('[server')) return 'acc';
+  if (t.includes('get /') || t.includes('post /'))   return 'info';
+  return 'info';
+}
+
+function appendLog(text) {
+  const body = document.getElementById('logBody');
+  const dot  = document.getElementById('logDot');
+  const cnt  = document.getElementById('logCount');
+  if (!body) return;
+
+  // Odstraň staré řádky pokud přesáhne limit
+  while (body.children.length >= LOG_MAX) body.removeChild(body.firstChild);
+
+  const line = document.createElement('div');
+  line.className = 'log-line ' + _logLevel(text);
+  line.textContent = text;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+
+  _logLines++;
+  if (cnt) cnt.textContent = _logLines > 99 ? '99+' : '';
+
+  // Blikni tečku
+  if (dot) {
+    dot.classList.add('active');
+    clearTimeout(dot._t);
+    dot._t = setTimeout(() => dot.classList.remove('active'), 1200);
+  }
+
+  // Auto-otevři panel při chybě
+  const panel = document.getElementById('logPanel');
+  if (panel && panel.classList.contains('collapsed') && _logLevel(text) === 'err') {
+    panel.classList.remove('collapsed');
+  }
+}
+
+let _logNext = 0;
+// _logPollTimer je deklarován výše (řádek 1471)
+
+function initLogStream() {
+  // Použij polling místo SSE - SSE blokuje vlákno waitress serveru
+  if (_logPollTimer) return;
+  _logNext = 0;
+  _logPollTimer = setInterval(pollLog, 1500);
+  pollLog(); // hned
+}
+
+async function pollLog() {
+  try {
+    const r = await fetch('/api/log/poll?since=' + _logNext);
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d.msgs && d.msgs.length) {
+      d.msgs.forEach(m => appendLog(m));
+      _logNext = d.next;
+    }
+  } catch(e) { /* tiché selhání */ }
+}
+
+// ── GitHub startup prefetch progress ──────────────────────────────────────────
+let _ghPrefetchTimer = null;
+
+async function pollGhPrefetch(container, sources) {
+  // Zastav případný předchozí polling
+  if (_ghPrefetchTimer) clearInterval(_ghPrefetchTimer);
+
+  const render = (progress) => {
+    container.innerHTML = '';
+    let anyRunning = false;
+
+    for (const src of sources) {
+      const p = progress[src.name];
+      if (!p || p.total === 0) continue;
+      const pct = p.total > 0 ? Math.round(p.done / p.total * 100) : 0;
+      if (p.running) anyRunning = true;
+      if (!p.running && pct >= 100) continue;
+
+      const label = document.createElement('div');
+      label.className = 'gh-prefetch-label';
+      const shortName = src.name.split('/').pop();
+      label.innerHTML = `<span>${shortName}</span><span>${p.done}/${p.total}</span>`;
+
+      const barWrap = document.createElement('div');
+      barWrap.className = 'gh-prefetch-bar';
+      const barInner = document.createElement('div');
+      barInner.className = 'gh-prefetch-bar-inner';
+      barInner.style.width = pct + '%';
+      if (!p.running) barInner.style.background = 'var(--green)';
+      barWrap.appendChild(barInner);
+
+      container.appendChild(label);
+      container.appendChild(barWrap);
+    }
+    return anyRunning;
+  };
+
+  // První fetch ihned
+  try {
+    const r = await fetch('/api/gallery/startup-progress');
+    const p = await r.json();
+    const running = render(p);
+    if (!running) return;  // vše hotovo, není co pollovat
+  } catch(_e) { return; }
+
+  // Polling každé 2s dokud vše nedoběhne
+  _ghPrefetchTimer = setInterval(async () => {
+    try {
+      const r = await fetch('/api/gallery/startup-progress');
+      const p = await r.json();
+      const running = render(p);
+      if (!running) {
+        clearInterval(_ghPrefetchTimer);
+        _ghPrefetchTimer = null;
+        // Zmizni po 3s
+        setTimeout(() => { container.innerHTML = ''; }, 3000);
+      }
+    } catch(_e) {
+      clearInterval(_ghPrefetchTimer);
+    }
+  }, 2000);
+}
+
+
+
+
+
+// ════════════════════════════════════════════════════════════════════
+//  SPRÁVA ZDROJŮ
+// ════════════════════════════════════════════════════════════════════
+
+function toggleForm(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateFilePick(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  const count = inp.files ? inp.files.length : 0;
+  const countEl = document.getElementById(inputId.replace('Pick','Count'));
+  if (countEl) countEl.textContent = count ? `${count} souborů vybráno` : '';
+  if (btn) btn.childNodes[0].textContent = count ? `✓ ${count} souborů` : (inputId.includes('chocho') ? '📦 Vybrat .7z archiv' : '📂 Vybrat PNG soubory');
+}
+
+async function loadSourcesPage() {
+  let sources = [];
+  try {
+    const r = await fetch('/api/sources');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    sources = await r.json() || [];
+  } catch(e) {
+    console.error('loadSourcesPage chyba:', e);
+    document.getElementById('srcGithubList').innerHTML =
+      `<div class="src-empty" style="color:var(--red)">Chyba: ${e.message}</div>`;
+    return;
+  }
+
+  const github = sources.filter(s => s.type === 'github');
+  const local  = sources.filter(s => s.type === 'local_pack');
+  const chocho = sources.filter(s => s.type === 'chocho_pack');
+  const xbmc   = sources.filter(s => s.type === 'xbmc_pack');
+
+  renderPackList('srcGithubList', github, 'github');
+  renderPackList('srcLocalList',  local,  'local_pack');
+  renderPackList('srcChochoList', chocho, 'chocho_pack');
+  const xbmcEl = document.getElementById('srcXbmcList');
+  if (xbmcEl) renderPackList('srcXbmcList', xbmc, 'xbmc_pack');
+  loadXbmcCreds();  // načti uložené credentials do formuláře
+}
+
+function renderPackList(containerId, items, type) {
+  const el = document.getElementById(containerId);
+  if (!items.length) {
+    el.innerHTML = '<div class="src-empty">Zatím žádné položky.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  for (const src of items) {
+    const card = document.createElement('div');
+    card.className = 'src-card';
+
+    let meta = '';
+    if (type === 'github')      meta = `github.com/${src.repo}${src.path ? ' / ' + src.path : ''}`;
+    else if (type === 'local_pack')  meta = `${src.count || 0} PNG souborů`;
+    else if (type === 'chocho_pack') meta = `${src.count || 0} ikon`;
+
+    const dotColor = type === 'github' ? 'var(--accent)' : type === 'local_pack' ? 'var(--green)' : type === 'xbmc_pack' ? '#e74c3c' : 'var(--orange)';
+
+    card.innerHTML = `
+      <span class="src-dot-lg" style="background:${dotColor}"></span>
+      <div class="src-card-info">
+        <div class="src-card-name">${src.name}</div>
+        <div class="src-card-meta">${meta}</div>
+      </div>
+      <div class="src-card-actions">
+        ${type === 'github' ? `<button class="btn btn-sm btn-outline" onclick="refreshSourceFromPage('${src.name}')" title="Sync">↻</button>` : ''}
+        <button class="btn btn-sm" style="border-color:var(--red);color:var(--red)"
+          onclick="removePack('${src.name}','${type}')">✕</button>
+      </div>`;
+    el.appendChild(card);
+  }
+}
+
+async function refreshSourceFromPage(name) {
+  toast(`Aktualizuji ${name}…`, 'inf');
+  try {
+    const r = await fetch('/api/gallery/refresh', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({source: name})
+    });
+    const d = await r.json();
+    toast(d.ok ? `${name} – sync spuštěn` : 'Chyba: '+(d.error||'?'), d.ok?'ok':'err');
+  } catch(_e) { toast('Chyba spojení', 'err'); }
+}
+
+async function addGithubSource() {
+  const repo  = document.getElementById('addGhRepo').value.trim();
+  const path  = document.getElementById('addGhPath').value.trim();
+  const token = document.getElementById('addGhToken').value.trim();
+  if (!repo || !repo.includes('/')) { toast('Zadej platný repo ve formátu owner/repo', 'err'); return; }
+  try {
+    const r = await fetch('/api/sources/add', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({type:'github', repo, path, token})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast('Zdroj přidán ✓', 'ok');
+      ['addGhRepo','addGhPath','addGhToken'].forEach(id => document.getElementById(id).value='');
+      toggleForm('addGhForm');
+      loadSourcesPage(); loadSources();
+    } else toast('Chyba: '+(d.error||'?'), 'err');
+  } catch(_e) { toast('Chyba spojení', 'err'); }
+}
+
+async function removePack(name, type) {
+  const label = type === 'github' ? `zdroj "${name}"` : `balíček "${name}"`;
+  if (!confirm(`Odebrat ${label}?`)) return;
+  try {
+    const endpoint = type === 'github' ? '/api/sources/remove' : '/api/sources/pack/remove';
+    const r = await fetch(endpoint, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, pack_type: type})
+    });
+    const d = await r.json();
+    if (d.ok) { toast('Odebráno ✓', 'ok'); loadSourcesPage(); loadSources(); }
+    else toast('Chyba: '+(d.error||'?'), 'err');
+  } catch(_e) { toast('Chyba spojení', 'err'); }
+}
+
+async function uploadLocalPack() {
+  const name = document.getElementById('addLocalName').value.trim();
+  const inp  = document.getElementById('localFilePick');
+  if (!name) { toast('Zadej název balíčku', 'err'); return; }
+  if (!inp.files || inp.files.length === 0) { toast('Vyber PNG soubory', 'err'); return; }
+
+  const fd = new FormData();
+  fd.append('name', name);
+  for (const f of inp.files) fd.append('files', f);
+
+  const btn = document.querySelector('#addLocalForm .btn-accent');
+  const orig = btn.textContent; btn.textContent = '⏳ Nahrávám…'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/sources/pack/upload', {method:'POST', body: fd});
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch { toast('Chyba serveru: ' + text.substring(0,100), 'err'); btn.textContent = orig; btn.disabled = false; return; }
+    if (d.ok) {
+      toast(`Balíček "${name}" nahrán – ${d.added} souborů ✓`, 'ok');
+      document.getElementById('addLocalName').value = '';
+      inp.value = ''; updateFilePick('localFilePick','localFilePickBtn');
+      toggleForm('addLocalForm');
+      loadSourcesPage(); loadSources();
+    } else toast('Chyba: '+(d.error||JSON.stringify(d)), 'err');
+  } catch(_e) { toast('Chyba spojení: ' + _e.message, 'err'); }
+  btn.textContent = orig; btn.disabled = false;
+}
+
+async function uploadChochoPack() {
+  const name = document.getElementById('addChochoName').value.trim();
+  const inp  = document.getElementById('chochoFilePick');
+  if (!name) { toast('Zadej název balíčku', 'err'); return; }
+  if (!inp.files || inp.files.length === 0) { toast('Vyber .7z archiv', 'err'); return; }
+
+  const fd = new FormData();
+  fd.append('name', name);
+  for (const f of inp.files) fd.append('archives', f);
+
+  const btn = document.querySelector('#addChochoForm .btn-accent');
+  const orig = btn.textContent; btn.textContent = '⏳ Rozbaluji…'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/sources/chocho/upload', {method:'POST', body: fd});
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch { toast('Chyba serveru: ' + text.substring(0,100), 'err'); btn.textContent = orig; btn.disabled = false; return; }
+    if (d.ok) {
+      toast(`Balíček "${name}" nahrán – ${d.added} ikon ✓`, 'ok');
+      document.getElementById('addChochoName').value = '';
+      inp.value = ''; updateFilePick('chochoFilePick','chochoFilePickBtn');
+      toggleForm('addChochoForm');
+      loadSourcesPage(); loadSources();
+    } else toast('Chyba: '+(d.error||JSON.stringify(d)), 'err');
+  } catch(_e) { toast('Chyba spojení: ' + _e.message, 'err'); }
+  btn.textContent = orig; btn.disabled = false;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  XBMC-KODI.CZ SCRAPER
+// ════════════════════════════════════════════════════════════════════
+
+
+// ── XBMC-Kodi credentials ────────────────────────────────────────────────────
+
+async function loadXbmcCreds() {
+  try {
+    const r = await fetch('/api/xbmc/credentials');
+    const d = await r.json();
+    const u = document.getElementById('xbmcCfgUser');
+    const p = document.getElementById('xbmcCfgPass');
+    if (u) u.value = d.username || '';
+    if (p) p.value = d.password ? '••••••' : '';
+    xbmcCredsDirty = false;
+  } catch(_e) {}
+}
+
+async function saveXbmcCreds() {
+  const user = document.getElementById('xbmcCfgUser')?.value.trim();
+  const pass = document.getElementById('xbmcCfgPass')?.value.trim();
+  if (!user) { toast('Zadej uživatelské jméno', 'err'); return; }
+  if (!pass || pass === '••••••') { toast('Zadej heslo', 'err'); return; }
+  try {
+    const r = await fetch('/api/xbmc/credentials', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username: user, password: pass})
+    });
+    const d = await r.json();
+    if (d.ok) { toast('Přihlašovací údaje uloženy ✓', 'ok'); xbmcCredsDirty = false; }
+    else toast('Chyba: ' + (d.error||'?'), 'err');
+  } catch(_e) { toast('Chyba spojení', 'err'); }
+}
+
+async function testAndSyncXbmc() {
+  const btn = document.getElementById('xbmcSyncBtn');
+  if (btn) { btn.textContent = '⏳ Spouštím…'; btn.disabled = true; }
+  try {
+    const r = await fetch('/api/xbmc/refresh', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({pack: 'tv-logo-pack'})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast('Synchronizace spuštěna na pozadí ✓', 'ok');
+      if (btn) { btn.textContent = '⏳ Probíhá…'; }
+      // Poll progress
+      const timer = setInterval(async () => {
+        try {
+          const pr = await fetch('/api/xbmc/progress');
+          const pd = await pr.json();
+          const p = pd['tv-logo-pack'];
+          if (!p || !p.running) {
+            clearInterval(timer);
+            if (btn) { btn.textContent = '▶ Synchronizovat nyní'; btn.disabled = false; }
+            if (p && !p.error) { toast(`Hotovo: +${p.new||0} nových log`, 'ok'); loadSourcesPage(); }
+            else if (p?.error) toast('Chyba: ' + p.error, 'err');
+          } else if (p.total > 0) {
+            const pct = Math.round(p.done/p.total*100);
+            if (btn) btn.textContent = `⏳ ${pct}%`;
+          }
+        } catch { clearInterval(timer); }
+      }, 2000);
+    } else {
+      toast('Chyba: ' + (d.error||'?'), 'err');
+      if (btn) { btn.textContent = '▶ Synchronizovat nyní'; btn.disabled = false; }
+    }
+  } catch(_e) {
+    toast('Chyba spojení', 'err');
+    if (btn) { btn.textContent = '▶ Synchronizovat nyní'; btn.disabled = false; }
+  }
+}
+
+// ── XBMC-Kodi.cz progress polling ────────────────────────────────────────────
+async function pollXbmcProgress(packName, refBtn) {
+  const timer = setInterval(async () => {
+    try {
+      const r = await fetch('/api/xbmc/progress');
+      const all = await r.json();
+      const p = all[packName];
+      if (!p) { clearInterval(timer); return; }
+
+      if (p.error) {
+        clearInterval(timer);
+        refBtn.textContent = '✗';
+        toast('XBMC chyba: ' + p.error, 'err');
+        setTimeout(() => { refBtn.textContent='↻'; refBtn.disabled=false; }, 3000);
+        return;
+      }
+
+      if (p.running) {
+        const pct = p.total > 0 ? Math.round(p.done / p.total * 100) : 0;
+        refBtn.textContent = p.total > 0 ? `${pct}%` : '⏳';
+        refBtn.title = `${p.done}/${p.total} staženo`;
+      } else {
+        clearInterval(timer);
+        refBtn.textContent = '✓';
+        refBtn.style.color = 'var(--green)';
+        toast(`XBMC-Kodi "${packName}": +${p.new || 0} nových log ✓`, 'ok');
+        setTimeout(() => {
+          refBtn.textContent = '↻'; refBtn.disabled = false;
+          refBtn.style.color = '';
+          loadSources();
+        }, 2500);
+      }
+    } catch(_e) { clearInterval(timer); }
+  }, 2000);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════════
+loadSources();
+initLogStream();
+
+initConfig().then(() => {
+  buildServiceSelect();
+  buildBadgeList();
+  syncPropsPanel();
+  render();
+}).catch(() => {
+  buildServiceSelect();
+  buildBadgeList();
+  syncPropsPanel();
+  render();
+});
+
+// ════════════════════════════════════════════════════════════════════
+//  GITHUB SPRÁVCE
+// ════════════════════════════════════════════════════════════════════
+
+const GH = {
+  repo:       '',   // aktuálně vybraný repozitář
+  path:       '',   // aktuální cesta v repozitáři
+  targetPath: '',   // cílová složka pro upload
+  targetRepo: '',
+  queue:      [],   // [ {item, name, canvas, status} ]
+};
+
+// ── Přihlášení ───────────────────────────────────────────────────
+
+function ghToggleLogin() {
+  const body  = document.getElementById('ghLoginBody');
+  const arrow = document.getElementById('ghLoginArrow');
+  const icon  = document.getElementById('ghLoginIcon');
+  const open  = body.style.display !== 'none';
+  body.style.display  = open ? 'none' : '';
+  arrow.textContent   = open ? '▶' : '▼';
+  icon.textContent    = open ? '🔒' : '🔑';
+}
+
+async function ghLoad() {
+  try {
+    const r = await fetch('/api/github/creds');
+    const d = await r.json();
+    if (d.token_set) {
+      document.getElementById('ghToken').placeholder = d.token_masked + '  (uložen)';
+      // Sbal přihlášení pokud je vše nastaveno
+      if (d.repo) {
+        document.getElementById('ghLoginBody').style.display = 'none';
+        document.getElementById('ghLoginArrow').textContent  = '▶';
+        document.getElementById('ghLoginIcon').textContent   = '🔒';
+        document.getElementById('ghCredsStatus').textContent = '✓ Připojeno';
+        document.getElementById('ghCredsStatus').style.color = 'var(--green)';
+      }
+    }
+    if (d.repo) {
+      document.getElementById('ghRepo').value = d.repo;
+      GH.repo = d.repo;
+      ghBrowse(d.repo, '');
+      ghLoadRepos();
+    }
+  } catch(e) {}
+  ghQueueRefreshFromEditor();
+}
+
+async function ghSaveCreds() {
+  const token  = document.getElementById('ghToken').value.trim();
+  const repo   = document.getElementById('ghRepo').value.trim();
+  const status = document.getElementById('ghCredsStatus');
+  if (!repo) { status.textContent = '⚠ Zadej repozitář'; status.style.color='var(--orange)'; return; }
+  status.textContent = 'Ukládám…'; status.style.color = 'var(--muted)';
+  try {
+    const r = await fetch('/api/github/creds', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({token, repo, path: ''})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      status.textContent = '✓ Uloženo a připojeno'; status.style.color = 'var(--green)';
+      GH.repo = repo;
+      document.getElementById('ghToken').value = '';
+      document.getElementById('ghToken').placeholder = 'token uložen';
+      // Sbal přihlášení
+      document.getElementById('ghLoginBody').style.display = 'none';
+      document.getElementById('ghLoginArrow').textContent  = '▶';
+      document.getElementById('ghLoginIcon').textContent   = '🔒';
+      ghLoadRepos();
+      ghBrowse(repo, '');
+    } else {
+      status.textContent = '✗ ' + d.error; status.style.color = 'var(--red)';
+    }
+  } catch(e) { status.textContent = '✗ Chyba spojení'; status.style.color = 'var(--red)'; }
+}
+
+// ── Repozitáře ───────────────────────────────────────────────────
+
+async function ghLoadRepos() {
+  const list = document.getElementById('ghRepoList');
+  list.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:4px">Načítám…</div>';
+  try {
+    const r = await fetch('/api/github/repos');
+    const d = await r.json();
+    if (!d.ok) { list.innerHTML = `<div style="color:var(--red);font-size:11px;padding:4px">${d.error}</div>`; return; }
+    list.innerHTML = '';
+    d.repos.forEach(repo => {
+      const el = document.createElement('div');
+      el.style.cssText = 'padding:5px 8px;border-radius:5px;cursor:pointer;font-size:11px;border:1px solid transparent;display:flex;align-items:center;gap:6px;transition:.12s';
+      el.innerHTML = `<span>${repo.private ? '🔒' : '📦'}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">${repo.full_name}</span>`;
+
+      // Tlačítko smazat repozitář
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '🗑';
+      delBtn.title = 'Smazat repozitář';
+      delBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:12px;opacity:0;transition:.12s;padding:0 2px;flex-shrink:0;color:var(--red)';
+      delBtn.onclick = (e) => { e.stopPropagation(); ghDeleteRepo(repo.full_name); };
+      el.appendChild(delBtn);
+
+      el.onmouseenter = () => { el.style.background = 'var(--s2)'; delBtn.style.opacity = '1'; };
+      el.onmouseleave = () => { if (GH.repo !== repo.full_name) el.style.background = ''; delBtn.style.opacity = '0'; };
+      el.onclick = () => {
+        document.getElementById('ghRepo').value = repo.full_name;
+        GH.repo = repo.full_name;
+        document.querySelectorAll('#ghRepoList > div').forEach(e => { e.style.background = ''; e.style.borderColor = 'transparent'; });
+        el.style.background = 'var(--s3)'; el.style.borderColor = 'var(--accent)';
+        ghBrowse(repo.full_name, '');
+      };
+      if (repo.full_name === GH.repo) { el.style.background = 'var(--s3)'; el.style.borderColor = 'var(--accent)'; }
+      list.appendChild(el);
+    });
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--red);font-size:11px;padding:4px">Chyba spojení</div>`;
+  }
+}
+
+async function ghCreateRepo() {
+  const name = prompt('Název nového repozitáře:');
+  if (!name || !name.trim()) return;
+  const desc    = prompt('Popis (nepovinné):') || '';
+  const priv    = confirm('Soukromý repozitář? (OK = soukromý, Zrušit = veřejný)');
+  toast('Vytvářím repozitář…', 'inf');
+  try {
+    const r = await fetch('/api/github/repo/create', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name.trim(), description: desc.trim(), private: priv})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast(`Repozitář „${d.full_name}" vytvořen ✓`, 'ok');
+      ghLoadRepos();
+    } else {
+      toast('Chyba: ' + d.error, 'err');
+    }
+  } catch(e) { toast('Chyba spojení', 'err'); }
+}
+
+async function ghDeleteRepo(repoName) {
+  const confirm1 = confirm(`⚠️ Opravdu SMAZAT celý repozitář „${repoName}"?\n\nTato akce je NEVRATNÁ – smaže všechny soubory a historii commitu.`);
+  if (!confirm1) return;
+  const confirm2 = prompt(`Pro potvrzení zadej přesný název repozitáře:\n${repoName}`);
+  if (confirm2 !== repoName) { toast('Název nesouhlasí – mazání zrušeno', 'err'); return; }
+  toast(`Mažu repozitář ${repoName}…`, 'inf');
+  try {
+    const r = await fetch('/api/github/repo/delete', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({repo: repoName})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast(`Repozitář „${repoName}" smazán ✓`, 'ok');
+      if (GH.repo === repoName) { GH.repo = ''; GH.path = ''; document.getElementById('ghFileList').innerHTML = ''; }
+      ghLoadRepos();
+    } else {
+      toast('Chyba: ' + d.error, 'err');
+    }
+  } catch(e) { toast('Chyba spojení', 'err'); }
+}
+
+// ── Procházení souborů ───────────────────────────────────────────
+
+async function ghBrowse(repo, path) {
+  GH.repo = repo; GH.path = path;
+  const fileList = document.getElementById('ghFileList');
+  fileList.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:16px 8px;text-align:center">Načítám…</div>';
+  document.getElementById('btnGhMkdir').style.display  = '';
+  document.getElementById('btnGhRefresh').style.display = '';
+  ghUpdateBreadcrumb(repo, path);
+  try {
+    const r = await fetch(`/api/github/browse?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(path)}`);
+    const d = await r.json();
+    if (!d.ok) { fileList.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px 8px;text-align:center">${d.error}</div>`; return; }
+    ghRenderFiles(d.items, repo, path);
+  } catch(e) {
+    fileList.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px 8px;text-align:center">Chyba spojení</div>`;
+  }
+}
+
+function ghRenderFiles(items, repo, path) {
+  const fileList = document.getElementById('ghFileList');
+  fileList.innerHTML = '';
+
+  // Složka ".." pro návrat
+  if (path) {
+    const parentPath = path.split('/').slice(0, -1).join('/');
+    const row = _ghRow('⬆ ..', false, false);
+    row.onclick = () => ghBrowse(repo, parentPath);
+    fileList.appendChild(row);
+  }
+
+  if (!items.length && !path) {
+    fileList.innerHTML += '<div style="color:var(--muted);font-size:12px;padding:12px 8px;text-align:center">Prázdný repozitář</div>';
+    return;
+  }
+
+  items.forEach(item => {
+    const isDir  = item.type === 'dir';
+    const isPng  = !isDir && item.name.toLowerCase().endsWith('.png');
+    const isKeep = item.name === '.gitkeep';
+    if (isKeep) return; // skryj .gitkeep
+
+    const row = _ghRow(
+      (isDir ? '📁 ' : isPng ? '' : '📄 ') + item.name,
+      isDir, isPng
+    );
+
+    // PNG náhled
+    if (isPng && item.download_url) {
+      const thumb = document.createElement('img');
+      thumb.style.cssText = 'width:32px;height:32px;object-fit:contain;border-radius:4px;background:#111;flex-shrink:0;margin-right:4px;order:-1';
+      thumb.src = `/api/logo?url=${encodeURIComponent(item.download_url)}`;
+      thumb.onerror = () => thumb.style.display = 'none';
+      row.insertBefore(thumb, row.firstChild);
+    }
+
+    // Velikost
+    if (!isDir && item.size) {
+      const sz = document.createElement('span');
+      sz.textContent = _ghFmtSize(item.size);
+      sz.style.cssText = 'font-size:10px;color:var(--muted);flex-shrink:0;margin-right:4px';
+      row.appendChild(sz);
+    }
+
+    // Tlačítko: složku označit jako cíl
+    if (isDir) {
+      const targetBtn = document.createElement('button');
+      targetBtn.textContent = '📌';
+      targetBtn.title = 'Nastavit jako cílovou složku pro upload';
+      targetBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:12px;opacity:0;transition:.12s;padding:0 2px;flex-shrink:0';
+      row.appendChild(targetBtn);
+      targetBtn.onclick = (e) => { e.stopPropagation(); ghSetTarget(repo, item.path, item.name); };
+      row.onmouseenter = () => { row.style.background = 'var(--s2)'; targetBtn.style.opacity = '1'; delBtn.style.opacity = '1'; };
+      row.onmouseleave = () => { row.style.background = ''; targetBtn.style.opacity = '0'; delBtn.style.opacity = '0'; };
+    }
+
+    // Tlačítko smazat
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '🗑';
+    delBtn.title = 'Smazat';
+    delBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:12px;opacity:0;transition:.12s;padding:0 2px;flex-shrink:0;color:var(--red)';
+    delBtn.onclick = (e) => { e.stopPropagation(); ghDelete(item, repo); };
+    row.appendChild(delBtn);
+
+    if (!isDir) {
+      row.onmouseenter = () => { row.style.background = 'var(--s2)'; delBtn.style.opacity = '1'; };
+      row.onmouseleave = () => { row.style.background = ''; delBtn.style.opacity = '0'; };
+    }
+
+    if (isDir) row.addEventListener('dblclick', () => ghBrowse(repo, item.path));
+    if (isDir) row.addEventListener('click',    () => ghBrowse(repo, item.path));
+
+    // Zvýrazni cílovou složku
+    if (isDir && GH.targetPath === item.path && GH.targetRepo === repo) {
+      row.style.borderColor = 'var(--green)';
+      row.style.background  = '#0d2818';
+    }
+
+    fileList.appendChild(row);
+  });
+}
+
+function _ghRow(label, isDir, isPng) {
+  const row = document.createElement('div');
+  row.style.cssText = `display:flex;align-items:center;gap:6px;padding:${isPng?'4px':'5px'} 8px;border-radius:5px;cursor:${isDir?'pointer':'default'};border:1px solid transparent;transition:.12s;font-size:12px;`;
+  const nameEl = document.createElement('span');
+  nameEl.textContent = label;
+  nameEl.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)';
+  row.appendChild(nameEl);
+  return row;
+}
+
+function ghSetTarget(repo, path, name) {
+  GH.targetRepo = repo;
+  GH.targetPath = path;
+  const label = document.getElementById('ghUploadTarget');
+  label.innerHTML = `Cíl: <strong style="color:var(--green)">${repo} / ${path}</strong>`;
+  document.getElementById('btnGhUploadAll').disabled = GH.queue.length === 0;
+  toast(`Cíl nastaven: ${name}`, 'ok');
+  // Překresli strom aby se zvýraznila složka
+  ghBrowse(repo, GH.path);
+}
+
+function ghUpdateBreadcrumb(repo, path) {
+  const bc    = document.getElementById('ghBreadcrumb');
+  const parts = path ? path.split('/') : [];
+  let html = `<span style="cursor:pointer;color:var(--accent)" onclick="ghBrowse('${repo}','')">🐙 ${repo.split('/')[1]||repo}</span>`;
+  let built = '';
+  parts.forEach((p, i) => {
+    built += (built ? '/' : '') + p;
+    const bp = built, isLast = i === parts.length - 1;
+    html += `<span style="color:var(--muted)"> / </span>`;
+    html += isLast
+      ? `<span style="color:var(--text)">${p}</span>`
+      : `<span style="cursor:pointer;color:var(--accent)" onclick="ghBrowse('${repo}','${bp}')">${p}</span>`;
+  });
+  bc.innerHTML = html;
+}
+
+async function ghDelete(item, repo) {
+  const label = item.type === 'dir' ? `složku "${item.name}" a vše v ní` : `"${item.name}"`;
+  if (!confirm(`Opravdu smazat ${label}?`)) return;
+  toast(`Mažu ${item.name}…`, 'inf');
+  try {
+    const r = await fetch('/api/github/delete', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({path: item.path, sha: item.sha || '', repo, type: item.type})
+    });
+    const d = await r.json();
+    if (d.ok) { toast(`Smazáno ✓`, 'ok'); ghBrowse(repo, GH.path); }
+    else toast('Chyba: ' + d.error, 'err');
+  } catch(e) { toast('Chyba spojení', 'err'); }
+}
+
+async function ghMkdir() {
+  if (!GH.repo) { toast('Nejprve vyber repozitář', 'err'); return; }
+  const name = prompt('Název nové složky:');
+  if (!name || !name.trim()) return;
+  const fullPath = GH.path ? GH.path + '/' + name.trim() : name.trim();
+  toast('Vytvářím složku…', 'inf');
+  try {
+    const r = await fetch('/api/github/mkdir', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({path: fullPath, repo: GH.repo})
+    });
+    const d = await r.json();
+    if (d.ok) { toast(`Složka "${name}" vytvořena ✓`, 'ok'); ghBrowse(GH.repo, GH.path); }
+    else toast('Chyba: ' + d.error, 'err');
+  } catch(e) { toast('Chyba spojení', 'err'); }
+}
+
+function ghRefresh() { if (GH.repo) ghBrowse(GH.repo, GH.path); }
+
+// ── Fronta nahrávání ─────────────────────────────────────────────
+
+function ghQueueRefreshFromEditor() {
+  _saveCurrentEditorState();
+  const allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
+  GH.queue = ED.items.map(m => {
+    // Vykresli ikonu do dočasného canvasu
+    const tmpC = document.createElement('canvas');
+    tmpC.width = W; tmpC.height = H;
+    const tc = tmpC.getContext('2d');
+    if (m.logoImg) _drawLogo(tc, m.logoImg, W, H);
+    for (const bt of allIds) {
+      if (!m.active[bt]) continue;
+      const l = m.layout[bt]; if (!l) continue;
+      const img = S.badgeImgs[bt];
+      const bw = (img ? img.naturalWidth : 52) * l.scale;
+      const bh = (img ? img.naturalHeight : 22) * l.scale;
+      tc.save(); tc.globalAlpha = l.opacity;
+      tc.translate(l.x + bw/2, l.y + bh/2); tc.rotate(l.rotation * Math.PI / 180);
+      if (img) tc.drawImage(img, -bw/2, -bh/2, bw, bh);
+      tc.restore();
+    }
+    return {
+      item:   m.item,
+      name:   m.item.name.replace(/\.png$/i, ''),
+      canvas: tmpC,
+      status: 'pending',  // pending | uploading | ok | err
+      error:  '',
+    };
+  });
+  ghRenderQueue();
+  document.getElementById('btnGhUploadAll').disabled = !(GH.queue.length > 0 && GH.targetPath);
+}
+
+function ghRenderQueue() {
+  const qEl = document.getElementById('ghQueue');
+  if (!GH.queue.length) {
+    qEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:24px 0;text-align:center">Přejdi do Editoru, uprav ikony a klikni ↺ Načíst z Editoru</div>';
+    return;
+  }
+  qEl.innerHTML = '';
+  GH.queue.forEach((entry, idx) => {
+    const row = document.createElement('div');
+    row.id = `ghq-${idx}`;
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--s2);border:1px solid var(--border)';
+
+    // Náhled
+    const thumb = document.createElement('canvas');
+    thumb.width = W; thumb.height = H;
+    thumb.style.cssText = 'width:48px;height:48px;object-fit:contain;border-radius:6px;background:#111;flex-shrink:0;image-rendering:auto';
+    thumb.getContext('2d').drawImage(entry.canvas, 0, 0);
+    row.appendChild(thumb);
+
+    // Info + editable název
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0';
+
+    const nameInput = document.createElement('input');
+    nameInput.value = entry.name;
+    nameInput.style.cssText = 'background:var(--s3);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 8px;font-size:12px;outline:none;width:100%;box-sizing:border-box;margin-bottom:4px';
+    nameInput.oninput = () => { entry.name = nameInput.value.trim(); _ghUpdateRowPath(row, idx); };
+    info.appendChild(nameInput);
+
+    const pathLabel = document.createElement('div');
+    pathLabel.id = `ghq-path-${idx}`;
+    pathLabel.style.cssText = 'font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    pathLabel.textContent = _ghEntryPath(entry);
+    info.appendChild(pathLabel);
+    row.appendChild(info);
+
+    // Status ikona
+    const statusEl = document.createElement('span');
+    statusEl.id = `ghq-status-${idx}`;
+    statusEl.style.cssText = 'font-size:16px;flex-shrink:0';
+    statusEl.textContent = _ghStatusIcon(entry.status);
+    row.appendChild(statusEl);
+
+    // Tlačítko nahrát jednotlivě
+    const uploadBtn = document.createElement('button');
+    uploadBtn.textContent = '⬆';
+    uploadBtn.title = 'Nahrát tento soubor';
+    uploadBtn.style.cssText = 'background:var(--s3);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 8px;cursor:pointer;font-size:12px;flex-shrink:0';
+    uploadBtn.onclick = () => ghUploadOne(idx);
+    row.appendChild(uploadBtn);
+
+    qEl.appendChild(row);
+  });
+}
+
+function _ghEntryPath(entry) {
+  if (!GH.targetRepo || !GH.targetPath) return '— nastav cílovou složku (📌 v manažeru vlevo)';
+  return `${GH.targetRepo} / ${GH.targetPath} / ${entry.name || '?'}.png`;
+}
+
+function _ghUpdateRowPath(row, idx) {
+  const pl = document.getElementById(`ghq-path-${idx}`);
+  if (pl) pl.textContent = _ghEntryPath(GH.queue[idx]);
+}
+
+function _ghStatusIcon(status) {
+  return {pending:'⬜', uploading:'⏳', ok:'✅', err:'❌'}[status] || '⬜';
+}
+
+async function ghUploadOne(idx) {
+  if (!GH.targetRepo || !GH.targetPath) { toast('Nastav nejprve cílovou složku (📌)', 'err'); return; }
+  const entry = GH.queue[idx];
+  if (!entry) return;
+  entry.status = 'uploading';
+  _ghUpdateStatus(idx);
+
+  const filename = (entry.name || entry.item.name.replace(/\.png$/i,'')).replace(/\.png$/i,'') + '.png';
+  const png_b64  = entry.canvas.toDataURL('image/png').split(',')[1];
+
+  try {
+    const r = await fetch('/api/publish', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        png_base64: png_b64,
+        filename,
+        repo: GH.targetRepo,
+        path: GH.targetPath,
+      })
+    });
+    const d = await r.json();
+    entry.status = d.ok ? 'ok' : 'err';
+    entry.error  = d.ok ? '' : (d.error || 'Chyba');
+  } catch(e) {
+    entry.status = 'err'; entry.error = e.message;
+  }
+  _ghUpdateStatus(idx);
+  ghRefresh();
+}
+
+async function ghUploadAll() {
+  if (!GH.targetRepo || !GH.targetPath) { toast('Nastav cílovou složku (📌)', 'err'); return; }
+  const log = document.getElementById('ghUploadLog');
+  log.innerHTML = ''; log.style.display = 'block';
+  document.getElementById('btnGhUploadAll').disabled = true;
+  let ok = 0, fail = 0;
+  for (let i = 0; i < GH.queue.length; i++) {
+    await ghUploadOne(i);
+    const e = GH.queue[i];
+    if (e.status === 'ok') {
+      ok++;
+      log.innerHTML += `<div style="color:var(--green)">✓ ${e.name}.png</div>`;
+    } else {
+      fail++;
+      log.innerHTML += `<div style="color:var(--red)">✗ ${e.name}.png – ${e.error}</div>`;
+    }
+    log.scrollTop = log.scrollHeight;
+  }
+  document.getElementById('btnGhUploadAll').disabled = false;
+  toast(`Nahráno: ${ok} OK, ${fail} chyb`, fail > 0 ? 'err' : 'ok');
+}
+
+function _ghUpdateStatus(idx) {
+  const entry = GH.queue[idx];
+  const statusEl = document.getElementById(`ghq-status-${idx}`);
+  if (statusEl) statusEl.textContent = _ghStatusIcon(entry.status);
+}
+
+function _ghFmtSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' kB';
+  return (bytes/1024/1024).toFixed(1) + ' MB';
+}
+
+</script>
+</body>
+</html>
