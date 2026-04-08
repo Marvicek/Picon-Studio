@@ -3545,12 +3545,16 @@ function ghRenderFiles(items, repo, path) {
   const fileList = document.getElementById('ghFileList');
   fileList.innerHTML = '';
 
-  // Složka ".." pro návrat
+  // Řádek ".." pro návrat
   if (path) {
     const parentPath = path.split('/').slice(0, -1).join('/');
-    const row = _ghRow('⬆ ..', false, false);
-    row.onclick = () => ghBrowse(repo, parentPath);
-    fileList.appendChild(row);
+    const backRow = document.createElement('div');
+    backRow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;cursor:pointer;border:1px solid transparent;transition:.12s;font-size:12px;color:var(--muted)';
+    backRow.innerHTML = '<span style="font-size:14px">⬆</span><span>Zpět</span>';
+    backRow.onmouseenter = () => backRow.style.background = 'var(--s2)';
+    backRow.onmouseleave = () => backRow.style.background = '';
+    backRow.onclick = () => ghBrowse(repo, parentPath);
+    fileList.appendChild(backRow);
   }
 
   if (!items.length && !path) {
@@ -3562,43 +3566,59 @@ function ghRenderFiles(items, repo, path) {
     const isDir  = item.type === 'dir';
     const isPng  = !isDir && item.name.toLowerCase().endsWith('.png');
     const isKeep = item.name === '.gitkeep';
-    if (isKeep) return; // skryj .gitkeep
+    if (isKeep) return;
 
-    const row = _ghRow(
-      (isDir ? '📁 ' : isPng ? '' : '📄 ') + item.name,
-      isDir, isPng
-    );
+    const isTarget = isDir && GH.targetPath === item.path && GH.targetRepo === repo;
 
-    // PNG náhled
+    const row = document.createElement('div');
+    row.style.cssText = [
+      'display:flex;align-items:center;gap:8px',
+      'padding:' + (isPng ? '4px' : '6px') + ' 10px',
+      'border-radius:6px',
+      'cursor:pointer',
+      'border:1px solid ' + (isTarget ? 'var(--green)' : 'transparent'),
+      'background:' + (isTarget ? '#0d2818' : 'transparent'),
+      'transition:.15s;font-size:12px;user-select:none'
+    ].join(';');
+
+    // Ikona / náhled
     if (isPng && item.download_url) {
       const thumb = document.createElement('img');
-      thumb.style.cssText = 'width:32px;height:32px;object-fit:contain;border-radius:4px;background:#111;flex-shrink:0;margin-right:4px;order:-1';
-      thumb.src = `/api/logo?url=${encodeURIComponent(item.download_url)}`;
-      thumb.onerror = () => thumb.style.display = 'none';
-      row.insertBefore(thumb, row.firstChild);
+      thumb.style.cssText = 'width:28px;height:28px;object-fit:contain;border-radius:3px;background:#111;flex-shrink:0';
+      thumb.src = '/api/logo?url=' + encodeURIComponent(item.download_url);
+      thumb.onerror = () => { thumb.style.display='none'; };
+      row.appendChild(thumb);
+    } else {
+      const icon = document.createElement('span');
+      icon.style.cssText = 'font-size:16px;flex-shrink:0;width:24px;text-align:center';
+      icon.textContent = isTarget ? '✅' : (isDir ? '📁' : '📄');
+      row.appendChild(icon);
     }
 
-    // Velikost
+    // Název
+    const nameEl = document.createElement('span');
+    nameEl.textContent = item.name;
+    nameEl.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:' + (isTarget ? 'var(--green)' : 'var(--text)');
+    if (isTarget) nameEl.style.fontWeight = '600';
+    row.appendChild(nameEl);
+
+    // Velikost pro soubory
     if (!isDir && item.size) {
       const sz = document.createElement('span');
       sz.textContent = _ghFmtSize(item.size);
-      sz.style.cssText = 'font-size:10px;color:var(--muted);flex-shrink:0;margin-right:4px';
+      sz.style.cssText = 'font-size:10px;color:var(--muted);flex-shrink:0';
       row.appendChild(sz);
     }
 
-    // Tlačítko: složku označit jako cíl
-    if (isDir) {
-      const targetBtn = document.createElement('button');
-      targetBtn.textContent = '📌';
-      targetBtn.title = 'Nastavit jako cílovou složku pro upload';
-      targetBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:12px;opacity:0;transition:.12s;padding:0 2px;flex-shrink:0';
-      row.appendChild(targetBtn);
-      targetBtn.onclick = (e) => { e.stopPropagation(); ghSetTarget(repo, item.path, item.name); };
-      row.onmouseenter = () => { row.style.background = 'var(--s2)'; targetBtn.style.opacity = '1'; delBtn.style.opacity = '1'; };
-      row.onmouseleave = () => { row.style.background = ''; targetBtn.style.opacity = '0'; delBtn.style.opacity = '0'; };
+    // Badge "CÍL" pro vybranou složku
+    if (isTarget) {
+      const badge = document.createElement('span');
+      badge.textContent = 'CÍL';
+      badge.style.cssText = 'font-size:9px;font-weight:700;background:var(--green);color:#000;border-radius:3px;padding:1px 5px;flex-shrink:0;letter-spacing:.05em';
+      row.appendChild(badge);
     }
 
-    // Tlačítko smazat
+    // Tlačítko smazat (hover)
     const delBtn = document.createElement('button');
     delBtn.textContent = '🗑';
     delBtn.title = 'Smazat';
@@ -3606,42 +3626,41 @@ function ghRenderFiles(items, repo, path) {
     delBtn.onclick = (e) => { e.stopPropagation(); ghDelete(item, repo); };
     row.appendChild(delBtn);
 
-    if (!isDir) {
-      row.onmouseenter = () => { row.style.background = 'var(--s2)'; delBtn.style.opacity = '1'; };
-      row.onmouseleave = () => { row.style.background = ''; delBtn.style.opacity = '0'; };
-    }
+    // Hover efekty
+    row.onmouseenter = () => {
+      if (!isTarget) row.style.background = 'var(--s2)';
+      delBtn.style.opacity = '1';
+    };
+    row.onmouseleave = () => {
+      if (!isTarget) row.style.background = '';
+      delBtn.style.opacity = '0';
+    };
 
-    if (isDir) row.addEventListener('dblclick', () => ghBrowse(repo, item.path));
-    if (isDir) row.addEventListener('click',    () => ghBrowse(repo, item.path));
-
-    // Zvýrazni cílovou složku
-    if (isDir && GH.targetPath === item.path && GH.targetRepo === repo) {
-      row.style.borderColor = 'var(--green)';
-      row.style.background  = '#0d2818';
+    // Klik na složku = otevřít + nastavit jako CÍL zároveň
+    if (isDir) {
+      row.onclick = () => {
+        ghSetTarget(repo, item.path, item.name);
+        ghBrowse(repo, item.path);
+      };
     }
 
     fileList.appendChild(row);
   });
-}
 
-function _ghRow(label, isDir, isPng) {
-  const row = document.createElement('div');
-  row.style.cssText = `display:flex;align-items:center;gap:6px;padding:${isPng?'4px':'5px'} 8px;border-radius:5px;cursor:${isDir?'pointer':'default'};border:1px solid transparent;transition:.12s;font-size:12px;`;
-  const nameEl = document.createElement('span');
-  nameEl.textContent = label;
-  nameEl.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)';
-  row.appendChild(nameEl);
-  return row;
+
 }
 
 function ghSetTarget(repo, path, name) {
   GH.targetRepo = repo;
   GH.targetPath = path;
   const label = document.getElementById('ghUploadTarget');
-  label.innerHTML = `Cíl: <strong style="color:var(--green)">${repo} / ${path}</strong>`;
+  label.innerHTML = 'Cíl: <strong style="color:var(--green)">' + repo + ' / ' + path + '</strong>';
   document.getElementById('btnGhUploadAll').disabled = GH.queue.length === 0;
-  toast(`Cíl nastaven: ${name}`, 'ok');
-  // Překresli strom aby se zvýraznila složka
+  // Aktualizuj ikonky ve frontě
+  document.querySelectorAll('[id^="ghq-path-"]').forEach((el, idx) => {
+    el.textContent = _ghEntryPath(GH.queue[idx]);
+  });
+  // Překresli strom pro zvýraznění
   ghBrowse(repo, GH.path);
 }
 

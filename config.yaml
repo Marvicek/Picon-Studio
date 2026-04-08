@@ -7,8 +7,8 @@ picon:
   height: 1024
   background: transparent
 sources:
-  logos_dir: ./logos
-  badges_dir: ./badges
+  logos_dir: C:\Project\Server\./logos
+  badges_dir: C:\Project\Server\./badges
   github_sources:
   - name: MarhyCZ/picons
     repo: MarhyCZ/picons
@@ -28,13 +28,17 @@ sources:
     password: ''
     enabled: false
 own_github:
-  enabled: false
-  repo: ''
-  path: '1024'
-  token: ''
+  enabled: true
+  repo: Marvicek
+  path: ''
+  token: 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
   commit_prefix: 'Picon: '
+xbmc_kodi:
+  username: ''
+  password: ''
+  cookies_file: ''
 cache:
-  disk_dir: ./cache
+  disk_dir: C:\Project\Server\./cache
   dnu_v_kesi: 7
   memory_lru_size: 200
 badge_defaults:
@@ -72,9 +76,31 @@ services:
   skylink:
     defaults:
       dvbs2: true
-    badges_dir: badges/skylink
+    badges_dir: C:\Project\Server\badges/skylink
     name_patterns: []
-xbmc_kodi:
-  username: ''
-  password: ''
-  cookies_file: ''
+  sledovanitv:
+    defaults:
+      iptv: true
+    badges_dir: C:\Project\Server\badges/sledovanitv
+    name_patterns: []
+  oneplay:
+    defaults:
+      iptv: true
+    badges_dir: C:\Project\Server\badges/oneplay
+    name_patterns: []
+  playcz:
+    defaults:
+      iptv: true
+    badges_dir: C:\Project\Server\badges/playcz
+    name_patterns: []
+  radia:
+    defaults:
+      radio: true
+      iptv: true
+    badges_dir: C:\Project\Server\badges/radia
+    name_patterns: []
+  ivysilani:
+    defaults:
+      dvbt2: true
+    badges_dir: C:\Project\Server\badges/ivysilani
+    name_patterns: []
