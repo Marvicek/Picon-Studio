@@ -11,7 +11,7 @@ import io
 import json
 from PIL import Image, ImageDraw, ImageFont
 
-BADGE_TYPES = ['dvbs2', 'dvbt2', 'iptv', 'radio', 'enc']
+BADGE_TYPES = ['dvbs2', 'dvbt2', 'iptv', 'radio', 'enc', 'hd', '4k']
 
 
 def _load_layout(badges_dir: str, badge_defaults: dict) -> dict:
@@ -66,7 +66,7 @@ def _apply_badge(canvas: Image.Image, badge_img: Image.Image, props: dict):
 
 
 def compose(logo_data: bytes | None, service_cfg: dict, active_badges: dict,
-            cfg: dict) -> bytes:
+            cfg: dict, extra_layers: list | None = None) -> bytes:
     """
     Složí výsledný picon PNG.
 
@@ -107,8 +107,12 @@ def compose(logo_data: bytes | None, service_cfg: dict, active_badges: dict,
         except Exception as e:
             print(f'[composer] Chyba při načtení loga: {e}')
 
-    # Načti layout
-    layout = _load_layout(badges_dir, badge_defs)
+    # Načti layout – _layout_override z URL generátoru má přednost
+    layout_override = service_cfg.get('_layout_override')
+    if layout_override:
+        layout = {**_load_layout(badges_dir, badge_defs), **layout_override}
+    else:
+        layout = _load_layout(badges_dir, badge_defs)
 
     # Vykresli aktivní badges
     for badge_type in BADGE_TYPES:
@@ -120,6 +124,15 @@ def compose(logo_data: bytes | None, service_cfg: dict, active_badges: dict,
             continue
         props = layout.get(badge_type, badge_defs.get(badge_type, {}))
         _apply_badge(canvas, badge_img, props)
+
+    # Vykresli extra vrstvy (custom PNG z URL generatoru)
+    if extra_layers:
+        for el in extra_layers:
+            try:
+                el_img = Image.open(io.BytesIO(el['data'])).convert('RGBA')
+                _apply_badge(canvas, el_img, el)
+            except Exception as e:
+                print(f'[composer] Chyba extra vrstvy: {e}')
 
     # Export jako PNG bytes
     out = io.BytesIO()

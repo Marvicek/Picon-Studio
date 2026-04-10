@@ -182,19 +182,6 @@ def api_sources():
     return json.dumps(sources, ensure_ascii=False)
 
 
-@app.route('/api/debug/upload-test', method='POST')
-def api_debug_upload():
-    """Debug endpoint – zobrazi co server prijal."""
-    try:
-        name   = request.forms.get('name', '<chybi>')
-        fkeys  = list(request.files.keys())
-        fnames = {k: [f.filename for f in request.files.getall(k)] for k in fkeys}
-        ct     = request.content_type
-        return json_response({'ok': True, 'name': name, 'content_type': ct,
-                              'file_keys': fkeys, 'filenames': fnames})
-    except Exception as e:
-        return json_response({'ok': False, 'error': str(e)})
-
 
 
 @app.route('/api/sources/pack/upload', method='POST')
@@ -583,7 +570,7 @@ def api_xbmc_refresh():
         try:
             import sys as _sys
             _sys.path.insert(0, SCRIPT_DIR)
-            from scripts.xbmc_kodi_scraper import login, load_cookies, get_all_attachment_ids, download_attachments, load_state, save_state, get_new_attachment_ids
+            from scripts.xbmc_kodi_scraper import login, load_cookies, download_attachments, load_state, save_state, get_new_attachment_ids
             import requests as _req
 
             sess = _req.Session()
@@ -1074,9 +1061,230 @@ def index():
     return ''
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  URL GENERATOR  –  /logo/<provider>/<quality>/<channel>
+#  + CRUD API pro logo_templates.yaml
+# ══════════════════════════════════════════════════════════════════════════════
+
+import yaml as _yaml
+
+_LOGO_TEMPLATES_FILE = os.path.join(SCRIPT_DIR, 'logo_templates.yaml')
+
+def _load_logo_templates() -> dict:
+    """Nacte logo_templates.yaml nebo vrati prazdny dict."""
+    if os.path.exists(_LOGO_TEMPLATES_FILE):
+        try:
+            with open(_LOGO_TEMPLATES_FILE, 'r', encoding='utf-8') as f:
+                return _yaml.safe_load(f) or {}
+        except Exception as e:
+            print(f'[logo_templates] Chyba cteni: {e}')
+    return {}
+
+def _save_logo_templates(data: dict):
+    with open(_LOGO_TEMPLATES_FILE, 'w', encoding='utf-8') as f:
+        _yaml.dump(data, f, allow_unicode=True, sort_keys=False)
+
+def _find_logo_file(filename: str) -> bytes | None:
+    """Hleda PNG soubor v logos/ a vsech podadresarich (packs, chocholousek, xbmc-kodi)."""
+    if not filename:
+        return None
+    logos = _logos_dir()
+    # 1. Prima cesta
+    full = os.path.join(logos, filename)
+    if os.path.exists(full):
+        with open(full, 'rb') as f:
+            return f.read()
+    # 2. Vsechny podadresare
+    for subdir in ['packs', 'chocholousek', 'xbmc-kodi']:
+        base = os.path.join(logos, subdir)
+        if not os.path.isdir(base):
+            continue
+        for pack in os.listdir(base):
+            p = os.path.join(base, pack, filename)
+            if os.path.exists(p):
+                with open(p, 'rb') as f:
+                    return f.read()
+    return None
 
 
-# ── /api/chocholousek – import rucne stazenych archivu ────────────────────────────────────────
+@app.route('/api/logo/file')
+def api_logo_file():
+    """Vrati PNG soubor podle jmena souboru z logos/ adresare (pro nahled v URL generatoru)."""
+    filename = request.query.get('name', '').strip()
+    if not filename or '..' in filename or filename.startswith('/'):
+        response.status = 400
+        return b''
+    data = _find_logo_file(filename)
+    if data:
+        response.content_type = 'image/png'
+        response.headers['Cache-Control'] = 'public, max-age=3600'
+        return data
+    response.status = 404
+    return b''
+
+
+# ── /logo/<provider>/<quality>/<channel> ─────────────────────────────────────
+
+@app.route('/logo/<provider>/<quality>/<channel>')
+def logo_url(provider, quality, channel):
+    """
+    Dynamicky generuje picon na zaklade URL parametru.
+    Priklad: /logo/o2/hd/ceskatelevize1
+    Volitelny parametr: ?layers=id1,id2  – aktivni vrstvy z URL generatoru
+    """
+    templates = _load_logo_templates()
+    tmpl = templates.get(provider)
+    if not tmpl:
+        response.status = 404
+        return b''
+
+    # 1. Najdi logo: channel mapping -> default -> resolver (GitHub cache + disk)
+    channels  = tmpl.get('channels', {})
+    logo_file = channels.get(channel) or tmpl.get('default_logo') or ''
+    # Normalizuj priponu
+    if logo_file and not logo_file.lower().endswith('.png'):
+        logo_file += '.png'
+    logo_data = _find_logo_file(logo_file) if logo_file else None
+    if not logo_data and logo_file:
+        logo_data = resolver.resolve(logo_file)
+
+    # 2. service_cfg
+    svc_cfg = cfg['services'].get(provider, {})
+
+    # 3. Aktivni badges: z templatu + quality badge
+    active_badges = {bt: False for bt in BADGE_TYPES}
+    for bt in tmpl.get('badges', []):
+        if bt in BADGE_TYPES:
+            active_badges[bt] = True
+    quality_badge = {'hd': 'hd', '4k': '4k'}.get(quality.lower())
+    if quality_badge and quality_badge in BADGE_TYPES:
+        active_badges[quality_badge] = True
+
+    # 4. Custom layout z templatu (pozice badges)
+    layout_override = tmpl.get('layout')
+    if layout_override:
+        svc_cfg = dict(svc_cfg)
+        svc_cfg['_layout_override'] = layout_override
+
+    # 5. Extra vrstvy – z ?layers= parametru nebo vsechny aktivni ze sablony
+    import urllib.parse as _ul
+    layers_param = request.query.get('layers', '').strip()
+    active_layer_ids = set(layers_param.split(',')) if layers_param else None
+    tmpl_layers = tmpl.get('layers', [])
+    extra_layers = []
+    for layer in tmpl_layers:
+        lid = layer.get('id', '')
+        if active_layer_ids is not None:
+            if lid not in active_layer_ids:
+                continue
+        else:
+            if not layer.get('active', True):
+                continue
+        src = layer.get('src', '')
+        layer_data = None
+        if '/api/logo/file?name=' in src:
+            fname = _ul.unquote(src.split('name=', 1)[1])
+            layer_data = _find_logo_file(fname)
+        elif src.startswith('/badges/'):
+            badge_path = os.path.join(os.path.dirname(__file__), src.lstrip('/'))
+            if os.path.exists(badge_path):
+                with open(badge_path, 'rb') as bf:
+                    layer_data = bf.read()
+        elif src.startswith('data:image/'):
+            # base64 dataUrl – dekóduj přímo
+            import base64 as _b64
+            try:
+                header, b64data = src.split(',', 1)
+                layer_data = _b64.b64decode(b64data)
+            except Exception:
+                pass
+        elif src and not src.startswith('/') and not src.startswith('http'):
+            # jen jméno souboru
+            layer_data = _find_logo_file(src if src.lower().endswith('.png') else src + '.png')
+        if layer_data:
+            extra_layers.append({
+                'data':     layer_data,
+                'x':        layer.get('x', 0),
+                'y':        layer.get('y', 0),
+                'scale':    layer.get('scale', 1.0),
+                'opacity':  layer.get('opacity', 1.0),
+                'rotation': layer.get('rotation', 0),
+            })
+
+    try:
+        result = compose(logo_data, svc_cfg, active_badges, cfg, extra_layers=extra_layers)
+        response.content_type = 'image/png'
+        response.set_header('Cache-Control', 'no-cache')
+        return result
+    except Exception as e:
+        print(f'[logo_url] Chyba: {e}')
+        response.status = 500
+        return b''
+
+
+# ── API: nacti vsechny templaty ───────────────────────────────────────────────
+
+@app.route('/api/logo_templates', method='GET')
+def api_logo_templates_get():
+    return json_response(_load_logo_templates())
+
+
+# ── API: uloz cely template pro poskytovatele ─────────────────────────────────
+
+@app.route('/api/logo_templates', method='POST')
+def api_logo_templates_save():
+    data = request.json or {}
+    provider = data.get('provider', '').strip()
+    if not provider:
+        return json_response({'ok': False, 'error': 'Chybi provider'}, 400)
+
+    templates = _load_logo_templates()
+    templates[provider] = {
+        'default_logo': data.get('default_logo', ''),
+        'badges':       data.get('badges', []),
+        'layout':       data.get('layout', {}),
+        'channels':     data.get('channels', {}),
+        'layers':       data.get('layers', []),
+    }
+    _save_logo_templates(templates)
+    print(f'[logo_templates] Ulozen provider: {provider}')
+    return json_response({'ok': True})
+
+
+# ── API: smazat poskytovatele ─────────────────────────────────────────────────
+
+@app.route('/api/logo_templates/<provider>', method='DELETE')
+def api_logo_templates_delete(provider):
+    templates = _load_logo_templates()
+    if provider not in templates:
+        return json_response({'ok': False, 'error': 'Provider nenalezen'}, 404)
+    del templates[provider]
+    _save_logo_templates(templates)
+    print(f'[logo_templates] Odebran provider: {provider}')
+    return json_response({'ok': True})
+
+
+# ── /api/logo/upload – nahrání PNG loga do logos/ adresáře ───────────────────
+
+@app.route('/api/logo/upload', method='POST')
+def api_logo_upload():
+    """Nahraje PNG soubor do logos/ adresáře. Vrátí jméno souboru."""
+    f = request.files.get('file')
+    if not f:
+        return json_response({'ok': False, 'error': 'Chybí soubor'}, 400)
+    fname = os.path.basename(f.filename or 'logo.png')
+    if not fname.lower().endswith('.png'):
+        fname += '.png'
+    # Bezpečnost: jen alfanumerické, pomlčky, tečky
+    import re as _re
+    fname = _re.sub(r'[^\w\-.]', '_', fname)
+    dest = os.path.join(_logos_dir(), fname)
+    os.makedirs(_logos_dir(), exist_ok=True)
+    f.save(dest, overwrite=True)
+    print(f'[logo/upload] Uloženo: {dest}')
+    return json_response({'ok': True, 'filename': fname})
+
+
 
 @app.route('/api/chocholousek/import', method='POST')
 def api_chocho_import():
