@@ -3,84 +3,50 @@
 composer.py
 Kompozice výsledného picon PNG:
   - Logo stanice (na pozadí)
-  - Příznakové ikony (badges) dle konfigurace služby a layout.json
+  - Extra vrstvy (custom PNG z URL generátoru)
 """
 
 import os
 import io
-import json
 from PIL import Image, ImageDraw, ImageFont
 
-BADGE_TYPES = ['dvbs2', 'dvbt2', 'iptv', 'radio', 'enc', 'hd', '4k']
 
-
-def _load_layout(badges_dir: str, badge_defaults: dict) -> dict:
-    """Načte layout.json ze složky služby, nebo vrátí výchozí pozice."""
-    layout_file = os.path.join(badges_dir, 'layout.json')
-    if os.path.exists(layout_file):
-        try:
-            with open(layout_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            print(f'[composer] Chyba při načtení layout.json: {e}')
-    return badge_defaults
-
-
-def _load_badge_image(badge_type: str, badges_dir: str, shared_dir: str) -> Image.Image | None:
-    """Načte PNG ikonku příznaku – nejdřív ze složky služby, pak ze shared/."""
-    for directory in [badges_dir, shared_dir]:
-        path = os.path.join(directory, f'{badge_type}.png')
-        if os.path.exists(path):
-            try:
-                return Image.open(path).convert('RGBA')
-            except Exception as e:
-                print(f'[composer] Chyba při načtení badge {path}: {e}')
-    return None
-
-
-def _apply_badge(canvas: Image.Image, badge_img: Image.Image, props: dict):
-    """Aplikuje badge na canvas s transformacemi (scale, rotation, opacity)."""
+def _apply_layer(canvas: Image.Image, layer_img: Image.Image, props: dict):
+    """Aplikuje vrstvu na canvas s transformacemi (scale, rotation, opacity)."""
     scale    = float(props.get('scale', 1.0))
     rotation = float(props.get('rotation', 0))
     opacity  = float(props.get('opacity', 1.0))
     x        = int(props.get('x', 0))
     y        = int(props.get('y', 0))
 
-    # Škálování
-    new_w = max(1, int(badge_img.width  * scale))
-    new_h = max(1, int(badge_img.height * scale))
-    badge = badge_img.resize((new_w, new_h), Image.LANCZOS)
+    new_w = max(1, int(layer_img.width  * scale))
+    new_h = max(1, int(layer_img.height * scale))
+    layer = layer_img.resize((new_w, new_h), Image.LANCZOS)
 
-    # Otočení
     if rotation != 0:
-        badge = badge.rotate(-rotation, expand=True, resample=Image.BICUBIC)
+        layer = layer.rotate(-rotation, expand=True, resample=Image.BICUBIC)
 
-    # Průhlednost
     if opacity < 1.0:
-        r, g, b, a = badge.split()
+        r, g, b, a = layer.split()
         a = a.point(lambda v: int(v * opacity))
-        badge = Image.merge('RGBA', (r, g, b, a))
+        layer = Image.merge('RGBA', (r, g, b, a))
 
-    # Vložení na canvas
-    canvas.paste(badge, (x, y), badge)
+    canvas.paste(layer, (x, y), layer)
 
 
-def compose(logo_data: bytes | None, service_cfg: dict, active_badges: dict,
+def compose(logo_data: bytes | None, service_cfg: dict,
             cfg: dict, extra_layers: list | None = None) -> bytes:
     """
     Složí výsledný picon PNG.
 
-    logo_data     – bytes PNG loga (nebo None → prázdné pozadí)
-    service_cfg   – konfigurace služby z config.yaml
-    active_badges – dict {badge_type: True/False} které příznaky zobrazit
-    cfg           – celá konfigurace (pro rozměry, cesty, badge_defaults)
+    logo_data    – bytes PNG loga (nebo None → prázdné pozadí)
+    service_cfg  – konfigurace služby (zatím nevyužívána)
+    cfg          – celá konfigurace (pro rozměry a pozadí)
+    extra_layers – seznam vrstev [{data, x, y, scale, opacity, rotation}]
     """
-    w = cfg['picon']['width']
-    h = cfg['picon']['height']
+    w  = cfg['picon']['width']
+    h  = cfg['picon']['height']
     bg = cfg['picon']['background']
-    badges_dir  = service_cfg.get('badges_dir', '')
-    shared_dir  = os.path.join(cfg['sources']['badges_dir'], 'shared')
-    badge_defs  = cfg['badge_defaults']
 
     # Pozadí
     if bg == 'transparent':
@@ -90,7 +56,6 @@ def compose(logo_data: bytes | None, service_cfg: dict, active_badges: dict,
     elif bg == 'white':
         canvas = Image.new('RGBA', (w, h), (255, 255, 255, 255))
     else:
-        # hex barva #rrggbb
         try:
             hex_color = bg.lstrip('#')
             r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
@@ -107,34 +72,15 @@ def compose(logo_data: bytes | None, service_cfg: dict, active_badges: dict,
         except Exception as e:
             print(f'[composer] Chyba při načtení loga: {e}')
 
-    # Načti layout – _layout_override z URL generátoru má přednost
-    layout_override = service_cfg.get('_layout_override')
-    if layout_override:
-        layout = {**_load_layout(badges_dir, badge_defs), **layout_override}
-    else:
-        layout = _load_layout(badges_dir, badge_defs)
-
-    # Vykresli aktivní badges
-    for badge_type in BADGE_TYPES:
-        if not active_badges.get(badge_type):
-            continue
-        badge_img = _load_badge_image(badge_type, badges_dir, shared_dir)
-        if badge_img is None:
-            print(f'[composer] Badge {badge_type} nenalezen (ani v shared/)')
-            continue
-        props = layout.get(badge_type, badge_defs.get(badge_type, {}))
-        _apply_badge(canvas, badge_img, props)
-
-    # Vykresli extra vrstvy (custom PNG z URL generatoru)
+    # Extra vrstvy (custom PNG z URL generátoru)
     if extra_layers:
         for el in extra_layers:
             try:
                 el_img = Image.open(io.BytesIO(el['data'])).convert('RGBA')
-                _apply_badge(canvas, el_img, el)
+                _apply_layer(canvas, el_img, el)
             except Exception as e:
                 print(f'[composer] Chyba extra vrstvy: {e}')
 
-    # Export jako PNG bytes
     out = io.BytesIO()
     canvas.save(out, format='PNG')
     return out.getvalue()

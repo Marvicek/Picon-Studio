@@ -8,7 +8,6 @@ picon:
   background: transparent
 sources:
   logos_dir: ./logos
-  badges_dir: ./badges
   github_sources:
   - name: MarhyCZ/picons
     repo: MarhyCZ/picons
@@ -37,42 +36,8 @@ cache:
   disk_dir: ./cache
   dnu_v_kesi: 7
   memory_lru_size: 200
-badge_defaults:
-  dvbs2:
-    x: 162
-    y: 104
-    scale: 1.0
-    rotation: 0
-    opacity: 1.0
-  dvbt2:
-    x: 162
-    y: 104
-    scale: 1.0
-    rotation: 0
-    opacity: 1.0
-  iptv:
-    x: 162
-    y: 104
-    scale: 1.0
-    rotation: 0
-    opacity: 1.0
-  radio:
-    x: 4
-    y: 104
-    scale: 1.0
-    rotation: 0
-    opacity: 1.0
-  enc:
-    x: 162
-    y: 4
-    scale: 0.8
-    rotation: 0
-    opacity: 0.9
 services:
   skylink:
-    defaults:
-      dvbs2: true
-    badges_dir: badges/skylink
     name_patterns: []
 xbmc_kodi:
   username: ''

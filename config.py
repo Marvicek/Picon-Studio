@@ -13,7 +13,6 @@ DEFAULT_CONFIG = {
     'picon':    {'width': 1024, 'height': 1024, 'background': 'transparent'},
     'sources': {
         'logos_dir':  './logos',
-        'badges_dir': './badges',
         'github_sources': [],
         'remote': {'enabled': False, 'url': ''},
     },
@@ -25,20 +24,13 @@ DEFAULT_CONFIG = {
         'username': '', 'password': '', 'cookies_file': '',
     },
     'cache': {'disk_dir': './cache', 'dnu_v_kesi': 7, 'memory_lru_size': 200},
-    'badge_defaults': {
-        'dvbs2': {'x': 162, 'y': 104, 'scale': 1.0, 'rotation': 0, 'opacity': 1.0},
-        'dvbt2': {'x': 162, 'y': 104, 'scale': 1.0, 'rotation': 0, 'opacity': 1.0},
-        'iptv':  {'x': 162, 'y': 104, 'scale': 1.0, 'rotation': 0, 'opacity': 1.0},
-        'radio': {'x':   4, 'y': 104, 'scale': 1.0, 'rotation': 0, 'opacity': 1.0},
-        'enc':   {'x': 162, 'y':   4, 'scale': 0.8, 'rotation': 0, 'opacity': 0.9},
-    },
     'services': {
-        'skylink':     {'defaults': {'dvbs2': True},               'badges_dir': 'badges/skylink',     'name_patterns': []},
-        'sledovanitv': {'defaults': {'iptv': True},                'badges_dir': 'badges/sledovanitv', 'name_patterns': []},
-        'oneplay':     {'defaults': {'iptv': True},                'badges_dir': 'badges/oneplay',     'name_patterns': []},
-        'playcz':      {'defaults': {'iptv': True},                'badges_dir': 'badges/playcz',      'name_patterns': []},
-        'radia':       {'defaults': {'radio': True, 'iptv': True}, 'badges_dir': 'badges/radia',       'name_patterns': []},
-        'ivysilani':   {'defaults': {'dvbt2': True},               'badges_dir': 'badges/ivysilani',   'name_patterns': []},
+        'skylink':     {'name_patterns': []},
+        'sledovanitv': {'name_patterns': []},
+        'oneplay':     {'name_patterns': []},
+        'playcz':      {'name_patterns': []},
+        'radia':       {'name_patterns': []},
+        'ivysilani':   {'name_patterns': []},
     },
 }
 
@@ -75,18 +67,12 @@ def load_config(script_dir: str, config_path: str = None) -> dict:
         print('[config] config.yaml nenalezen – výchozí hodnoty.')
 
     # Absolutní cesty
-    for key in ('logos_dir', 'badges_dir'):
-        p = cfg['sources'][key]
-        if not os.path.isabs(p):
-            cfg['sources'][key] = os.path.join(script_dir, p)
+    p = cfg['sources']['logos_dir']
+    if not os.path.isabs(p):
+        cfg['sources']['logos_dir'] = os.path.join(script_dir, p)
 
     p = cfg['cache']['disk_dir']
     if not os.path.isabs(p):
         cfg['cache']['disk_dir'] = os.path.join(script_dir, p)
-
-    for svc in cfg['services'].values():
-        bd = svc.get('badges_dir', '')
-        if bd and not os.path.isabs(bd):
-            svc['badges_dir'] = os.path.join(script_dir, bd)
 
     return cfg

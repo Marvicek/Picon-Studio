@@ -365,11 +365,6 @@ header h1 { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
   margin-left: auto; display: flex; flex-direction: column;
   align-items: flex-end; gap: 5px; flex-shrink: 0; padding-left: 12px;
 }
-.ed-sel-badge {
-  background: #1a2e22; border: 1px solid var(--green);
-  color: var(--green); border-radius: 12px; padding: 2px 10px;
-  font-size: 11px; font-weight: 700; white-space: nowrap;
-}
 
 /* Editor body */
 .editor-body { display: flex; flex: 1; overflow: hidden; }
@@ -387,9 +382,6 @@ header h1 { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
 }
 .editor-left-col .edsec { border-bottom: none; }
 .editor-left-col .service-select { font-size: 11px; }
-.provider-badge-list {
-  display: flex; flex-direction: column; gap: 3px; margin-top: 4px;
-}
 .overlay-item {
   display: flex; align-items: center; gap: 5px; padding: 5px 6px;
   border-radius: 5px; background: var(--s2); border: 1px solid transparent;
@@ -409,15 +401,6 @@ header h1 { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
   background: none;
 }
 .overlay-add-btn:hover { border-color: var(--accent); color: var(--text); }
-.provider-badge-item {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 6px; border-radius: 5px; font-size: 11px;
-  cursor: pointer; background: var(--s2); border: 1px solid transparent;
-  transition: border-color .12s;
-}
-.provider-badge-item.sel { border-color: var(--accent); background: var(--s3); }
-.provider-badge-item input[type=checkbox] { cursor: pointer; flex-shrink: 0; }
-
 /* Pravý panel – vlastnosti + akce */
 .editor-right {
   width: 250px; border-left: 1px solid var(--border);
@@ -453,18 +436,6 @@ header h1 { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
 }
 .size-pill:hover { border-color: var(--accent); color: var(--text); }
 .size-pill.active { border-color: var(--accent); color: var(--accent); background: var(--s3); }
-/* Badge grid */
-.badge-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
-}
-.badge-chip {
-  background: var(--s2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 5px 8px;
-  display: flex; align-items: center; gap: 6px;
-  cursor: pointer; font-size: 11px; transition: all .12s;
-}
-.badge-chip.on { border-color: var(--accent); background: var(--s3); color: var(--text); }
-.badge-chip input[type=checkbox] { cursor: pointer; }
 
 .canvas-wrap {
   position: relative; border: 2px solid var(--border); border-radius: 8px;
@@ -478,17 +449,6 @@ header h1 { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
   image-rendering: crisp-edges;
 }
 .canvas-label { font-size: 11px; color: var(--muted); text-align: center; }
-
-.badge-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 7px 10px; border-radius: 7px; margin-bottom: 4px;
-  background: var(--s2); border: 1px solid var(--border);
-  cursor: pointer; transition: all .15s;
-}
-.badge-item:hover   { border-color: var(--accent); }
-.badge-item.sel     { border-color: var(--accent); background: #1a2a4a; }
-.badge-item input[type=checkbox] { accent-color: var(--accent); }
-.badge-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* Prop sliders */
 .props-wrap { padding: 0 14px 14px; }
@@ -707,12 +667,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
 .ug-row label { font-size:12px;color:var(--muted);width:120px;flex-shrink:0; }
 .ug-row input[type=text] { flex:1;background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px; }
 .ug-row input[type=text]:focus { outline:none;border-color:var(--accent); }
-.ug-badge-grid { display:flex;gap:6px;flex-wrap:wrap; }
-.ug-badge-chip {
-  padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;
-  border:1px solid var(--border);background:var(--s2);color:var(--muted);transition:all .15s;
-}
-.ug-badge-chip.on { background:var(--accent);color:#fff;border-color:var(--accent); }
 .ug-channel-row { display:flex;gap:6px;align-items:center;margin-bottom:5px; }
 .ug-channel-row input { background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:4px 7px;color:var(--text);font-size:12px; }
 .ug-channel-row input:focus { outline:none;border-color:var(--accent); }
@@ -785,7 +739,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
   <div class="editor-filmstrip" id="editorFilmstrip">
     <div class="ed-empty" id="edFilmstripEmpty">← Vyber loga v Galerii</div>
     <div class="ed-filmstrip-tail" id="edFilmstripTail" style="display:none">
-      <span class="ed-sel-badge" id="edSelBadge">0 vybráno</span>
     </div>
   </div>
 
@@ -937,12 +890,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
         <div class="edsec-title" style="display:flex;align-items:center;gap:5px">
           <span>📤</span> Kopírovat na ostatní
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
-          <button class="btn btn-sm btn-outline" onclick="applyLayoutToAll()" title="Přenese pozice a velikosti vrstev na všechna ostatní loga">
-            🗂 Vrstvy
-          </button>
-          <button class="btn btn-sm btn-outline" onclick="applyBadgesToAll()" title="Přenese aktivní badges na všechna ostatní loga">
-            🏷 Badges
+        <div style="margin-top:6px">
+          <button class="btn btn-sm btn-outline btn-full" onclick="applyLayoutToAll()" title="Přenese pozice a velikosti vrstev na všechna ostatní loga">
+            🗂 Aplikovat vrstvy na vše
           </button>
         </div>
       </div>
@@ -978,9 +928,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
           🐙 Publikovat na GitHub →
         </button>
       </div>
-
-      <!-- skrytý file input pro badge upload (používá JS handler) -->
-      <input type="file" id="fileInput" accept=".png" style="display:none">
 
     </div>
   </div>
@@ -1250,18 +1197,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
 // ════════════════════════════════════════════════════════════════════
 //  KONFIGURACE & KONSTANTY
 // ════════════════════════════════════════════════════════════════════
-const BADGE_TYPES  = [];  // odstraněno – používáme OV_LAYERS
-const BADGE_COLORS = { dvbs2:'#5b8def', dvbt2:'#f59e0b', iptv:'#8b5cf6', radio:'#64748b', enc:'#f87171' };
-const BADGE_LABELS = { dvbs2:'DVB-S2 (Satelit)', dvbt2:'DVB-T2 (Terestr)', iptv:'IPTV (Stream)', radio:'Radio', enc:'Encrypted' };
 const SERVICES     = ['skylink'];  // ostatní se načtou ze serveru
 let xbmcCredsDirty = false;  // deklarace musí být před HTML inline handlery
-const DEF_LAYOUT   = {
-  dvbs2:{x:162,y:104,scale:1,rotation:0,opacity:1},
-  dvbt2:{x:162,y:104,scale:1,rotation:0,opacity:1},
-  iptv: {x:162,y:104,scale:1,rotation:0,opacity:1},
-  radio:{x:4,  y:104,scale:1,rotation:0,opacity:1},
-  enc:  {x:162,y:4,  scale:.8,rotation:0,opacity:.9},
-};
 let W = 1024, H = 1024;  // načte se z /api/config
 
 // ════════════════════════════════════════════════════════════════════
@@ -1271,9 +1208,8 @@ const S = {
   tab:           'gallery',
   service:       SERVICES[0],
   selBadge:      null,
-  active:        Object.fromEntries(BADGE_TYPES.map(b=>[b,false])),
-  layout:        JSON.parse(JSON.stringify(DEF_LAYOUT)),
-  badgeImgs:     {},
+  active:        {},
+  layout:        {},
   logoImg:       null,
   drag:          null,
   gallerySource: null,
@@ -1997,7 +1933,6 @@ function updateEditorFilmstrip() {
   const strip  = document.getElementById('editorFilmstrip');
   const tail   = document.getElementById('edFilmstripTail');
   const empty  = document.getElementById('edFilmstripEmpty');
-  const badge  = document.getElementById('edSelBadge');
   const n = ED.items.length;
 
   strip.querySelectorAll('.ed-thumb').forEach(t => t.remove());
@@ -2009,7 +1944,6 @@ function updateEditorFilmstrip() {
   }
   empty.style.display = 'none';
   tail.style.display  = 'flex';
-  badge.textContent   = n + (n === 1 ? ' ikona' : n < 5 ? ' ikony' : ' ikon');
 
   ED.items.forEach((m, i) => {
     const th = document.createElement('div');
@@ -2075,7 +2009,7 @@ async function loadEditorItem(idx) {
   // Synchronizuj UI
   const sel = document.getElementById('serviceSelect');
   if (sel) sel.value = S.service;
-  buildBadgeList();
+  buildOverlayList();
   S.selBadge = null;
   syncPropsPanel();
 
@@ -2126,15 +2060,6 @@ function applyLayoutToAll() {
   toast('Rozložení aplikováno na všechny', 'ok');
 }
 
-function applyBadgesToAll() {
-  _saveCurrentEditorState();
-  const src = ED.items[ED.idx];
-  ED.items.forEach((m, i) => {
-    if (i !== ED.idx) m.active = {...src.active};
-  });
-  toast('Badges aplikovány na všechny', 'ok');
-}
-
 function edExportCurrent() {
   _saveCurrentEditorState();
   const m = ED.items.length > 0 ? ED.items[ED.idx] : null;
@@ -2147,23 +2072,22 @@ function edExportCurrent() {
 
 function edExportAll() {
   _saveCurrentEditorState();
-  const allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
   ED.items.forEach((m, i) => {
     const tmpC = document.createElement('canvas');
     tmpC.width = W; tmpC.height = H;
     const tc = tmpC.getContext('2d');
     if (m.logoImg) _drawLogo(tc, m.logoImg, W, H);
-    for (const bt of allIds) {
-      if (!m.active[bt]) continue;
-      const l = m.layout[bt]; if (!l) continue;
-      const img = S.badgeImgs[bt];
+    OV_LAYERS.forEach(ov => {
+      if (!m.active[ov.id]) return;
+      const l = m.layout[ov.id]; if (!l) return;
+      const img = ov.img;
       const bw = (img ? img.naturalWidth : 52) * l.scale;
       const bh = (img ? img.naturalHeight : 22) * l.scale;
       tc.save(); tc.globalAlpha = l.opacity;
       tc.translate(l.x + bw/2, l.y + bh/2); tc.rotate(l.rotation * Math.PI / 180);
       if (img) tc.drawImage(img, -bw/2, -bh/2, bw, bh);
       tc.restore();
-    }
+    });
     const a = document.createElement('a');
     a.download = m.item.name;
     a.href = tmpC.toDataURL('image/png');
@@ -2195,25 +2119,23 @@ async function edPushCurrent() {
 
 async function edPushAll() {
   _saveCurrentEditorState();
-  const log = null;
   let ok = 0, fail = 0;
-  const allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
   for (const m of ED.items) {
     const tmpC = document.createElement('canvas');
     tmpC.width = W; tmpC.height = H;
     const tc = tmpC.getContext('2d');
     if (m.logoImg) _drawLogo(tc, m.logoImg, W, H);
-    for (const bt of allIds) {
-      if (!m.active[bt]) continue;
-      const l = m.layout[bt]; if (!l) continue;
-      const img = S.badgeImgs[bt];
-      const bw = (img ? img.naturalWidth : 52) * l.scale;
-      const bh = (img ? img.naturalHeight : 22) * l.scale;
+    OV_LAYERS.forEach(ov => {
+      if (!m.active[ov.id]) return;
+      const l = m.layout[ov.id]; if (!l) return;
+      const img = ov.img;
+      const bw = img.naturalWidth  * l.scale;
+      const bh = img.naturalHeight * l.scale;
       tc.save(); tc.globalAlpha = l.opacity;
       tc.translate(l.x + bw/2, l.y + bh/2); tc.rotate(l.rotation * Math.PI / 180);
-      if (img) tc.drawImage(img, -bw/2, -bh/2, bw, bh);
+      tc.drawImage(img, -bw/2, -bh/2, bw, bh);
       tc.restore();
-    }
+    });
     const png_b64 = tmpC.toDataURL('image/png').split(',')[1];
     try {
       const r = await fetch('/api/publish', {
@@ -2221,10 +2143,9 @@ async function edPushAll() {
         body: JSON.stringify({png_base64: png_b64, filename: m.item.name})
       });
       const d = await r.json();
-      if (d.ok) { ok++; m.done = true; if (log) log.innerHTML += `<div style="color:var(--green)">✓ ${m.item.name}</div>`; }
-      else       { fail++; if (log) log.innerHTML += `<div style="color:var(--red)">✗ ${m.item.name}: ${d.error}</div>`; }
-    } catch(e)   { fail++; if (log) log.innerHTML += `<div style="color:var(--red)">✗ ${m.item.name}</div>`; }
-    if (log) log.scrollTop = log.scrollHeight;
+      if (d.ok) { ok++; m.done = true; }
+      else       { fail++; }
+    } catch(e)   { fail++; }
   }
   updateEditorFilmstrip();
   toast(`Push: ${ok} OK, ${fail} chyb`, fail > 0 ? 'err' : 'ok');
@@ -2342,33 +2263,22 @@ function render() {
   }
 
   // Vykresli všechny aktivní overlay vrstvy
-  const activeIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
-  for (const bt of activeIds) {
-    if (!S.active[bt]) continue;
-    const l   = S.layout[bt];
-    const img = S.badgeImgs[bt];
-    const bw  = (img ? img.naturalWidth  : 52) * l.scale;
-    const bh  = (img ? img.naturalHeight : 22) * l.scale;
+  for (const ov of OV_LAYERS) {
+    if (!S.active[ov.id]) continue;
+    const l   = S.layout[ov.id];
+    const img = ov.img;
+    if (!l || !img) continue;
+    const bw  = img.naturalWidth  * l.scale;
+    const bh  = img.naturalHeight * l.scale;
 
     ctx.save();
     ctx.globalAlpha = l.opacity;
     ctx.translate(l.x + bw/2, l.y + bh/2);
     ctx.rotate(l.rotation * Math.PI / 180);
-    if (img) {
-      ctx.drawImage(img, -bw/2, -bh/2, bw, bh);
-    } else {
-      ctx.fillStyle = BADGE_COLORS[bt];
-      ctx.beginPath();
-      ctx.roundRect(-bw/2, -bh/2, bw, bh, 4*l.scale);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${Math.max(7, 10*l.scale)}px Segoe UI`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(bt.toUpperCase(), 0, 0);
-    }
+    ctx.drawImage(img, -bw/2, -bh/2, bw, bh);
     ctx.restore();
 
-    if (S.selBadge === bt) {
+    if (S.selBadge === ov.id) {
       ctx.save();
       ctx.strokeStyle = '#5b8def';
       ctx.lineWidth = 1.5;
@@ -2380,14 +2290,13 @@ function render() {
 }
 
 function badgeHitTest(mx, my) {
-  const _allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
-  for (const bt of [..._allIds].reverse()) {
-    if (!S.active[bt]) continue;
-    const l = S.layout[bt];
-    const img = S.badgeImgs[bt];
-    const bw = (img ? img.naturalWidth  : 52) * l.scale;
-    const bh = (img ? img.naturalHeight : 22) * l.scale;
-    if (mx>=l.x && mx<=l.x+bw && my>=l.y && my<=l.y+bh) return bt;
+  for (const ov of [...OV_LAYERS].reverse()) {
+    if (!S.active[ov.id]) continue;
+    const l = S.layout[ov.id];
+    if (!l || !ov.img) continue;
+    const bw = ov.img.naturalWidth  * l.scale;
+    const bh = ov.img.naturalHeight * l.scale;
+    if (mx>=l.x && mx<=l.x+bw && my>=l.y && my<=l.y+bh) return ov.id;
   }
   return null;
 }
@@ -2403,7 +2312,7 @@ canvas.addEventListener('mousedown', e => {
     S.selBadge = bt;
     const l = S.layout[bt];
     S.drag = { bt, offX: mx-l.x, offY: my-l.y };
-    syncPropsPanel(); buildBadgeList(); render();
+    syncPropsPanel(); buildOverlayList(); render();
   }
 });
 canvas.addEventListener('mousemove', e => {
@@ -2451,7 +2360,6 @@ function addOverlayLayer(name, dataUrl) {
     OV_LAYERS.push({id, name, label: name.replace(/\.png$/i,''), img, dataUrl});
     if (!S.layout[id]) S.layout[id] = _ovDefaultLayout();
     S.active[id] = false;
-    S.badgeImgs[id] = img;
     buildOverlayList();
     _buildOverlaySelect();
   };
@@ -2464,7 +2372,6 @@ function removeOverlayLayer(id) {
   if (idx >= 0) OV_LAYERS.splice(idx, 1);
   delete S.active[id];
   delete S.layout[id];
-  delete S.badgeImgs[id];
   if (S.selBadge === id) { S.selBadge = null; syncPropsPanel(); }
   buildOverlayList();
   _buildOverlaySelect();
@@ -2658,9 +2565,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Zpětná kompatibilita — buildBadgeList nyní volá buildOverlayList
-function buildBadgeList() { buildOverlayList(); }
-
 function syncPropsPanel() {
   const bt = S.selBadge;
   document.getElementById('noBadgeSel').classList.toggle('hidden', !!bt);
@@ -2708,15 +2612,13 @@ function propsToState() {
 
 function resetBadge() {
   if (!S.selBadge) return;
-  S.layout[S.selBadge] = S.selBadge.startsWith('ov_')
-    ? _ovDefaultLayout()
-    : {...DEF_LAYOUT[S.selBadge]};
+  S.layout[S.selBadge] = _ovDefaultLayout();
   syncPropsPanel(); render();
 }
 
 function resetAll() {
-  S.layout = JSON.parse(JSON.stringify(DEF_LAYOUT));
-  syncPropsPanel(); render(); toast('Reset všech badges','inf');
+  OV_LAYERS.forEach(ov => { S.layout[ov.id] = _ovDefaultLayout(); });
+  syncPropsPanel(); render(); toast('Reset vrstev', 'inf');
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -2838,22 +2740,8 @@ async function deleteCurrentProvider() {
 
 
 // ════════════════════════════════════════════════════════════════════
-//  EDITOR – Upload loga a badge
+//  EDITOR – Upload loga
 // ════════════════════════════════════════════════════════════════════
-document.getElementById('fileInput').onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (!S.selBadge) { toast('Nejdřív vyber příznak!', 'err'); return; }
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => { S.badgeImgs[S.selBadge] = img; render(); toast(`Badge ${S.selBadge} načten`, 'ok'); };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-};
-
 document.getElementById('logoInput').onchange = e => {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
@@ -2969,15 +2857,6 @@ async function initConfig() {
     }
   } catch(e) {}
   buildServiceSelect();
-  // Přepočítej výchozí layout pozice na nové rozměry (poměrově)
-  const scaleX = W / 220;
-  const scaleY = H / 132;
-  for (const bt of BADGE_TYPES) {
-    DEF_LAYOUT[bt].x = Math.round(DEF_LAYOUT[bt].x * scaleX);
-    DEF_LAYOUT[bt].y = Math.round(DEF_LAYOUT[bt].y * scaleY);
-    S.layout[bt].x   = DEF_LAYOUT[bt].x;
-    S.layout[bt].y   = DEF_LAYOUT[bt].y;
-  }
 }
 
 // ── Size picker ──────────────────────────────────────────────────
@@ -3491,12 +3370,12 @@ initLogStream();
 
 initConfig().then(() => {
   buildServiceSelect();
-  buildBadgeList();
+  buildOverlayList();
   syncPropsPanel();
   render();
 }).catch(() => {
   buildServiceSelect();
-  buildBadgeList();
+  buildOverlayList();
   syncPropsPanel();
   render();
 });
@@ -3882,24 +3761,22 @@ function ghRefresh() { if (GH.repo) ghBrowse(GH.repo, GH.path); }
 
 function ghQueueRefreshFromEditor() {
   _saveCurrentEditorState();
-  const allIds = [...BADGE_TYPES, ...OV_LAYERS.map(o=>o.id)];
   GH.queue = ED.items.map(m => {
-    // Vykresli ikonu do dočasného canvasu
     const tmpC = document.createElement('canvas');
     tmpC.width = W; tmpC.height = H;
     const tc = tmpC.getContext('2d');
     if (m.logoImg) _drawLogo(tc, m.logoImg, W, H);
-    for (const bt of allIds) {
-      if (!m.active[bt]) continue;
-      const l = m.layout[bt]; if (!l) continue;
-      const img = S.badgeImgs[bt];
-      const bw = (img ? img.naturalWidth : 52) * l.scale;
-      const bh = (img ? img.naturalHeight : 22) * l.scale;
+    OV_LAYERS.forEach(ov => {
+      if (!m.active[ov.id]) return;
+      const l = m.layout[ov.id]; if (!l) return;
+      const img = ov.img;
+      const bw = img.naturalWidth  * l.scale;
+      const bh = img.naturalHeight * l.scale;
       tc.save(); tc.globalAlpha = l.opacity;
       tc.translate(l.x + bw/2, l.y + bh/2); tc.rotate(l.rotation * Math.PI / 180);
-      if (img) tc.drawImage(img, -bw/2, -bh/2, bw, bh);
+      tc.drawImage(img, -bw/2, -bh/2, bw, bh);
       tc.restore();
-    }
+    });
     return {
       item:   m.item,
       name:   m.item.name.replace(/\.png$/i, ''),
@@ -4118,15 +3995,7 @@ async function ugDeleteProvider(name) {
 function ugRenderEditor(name) {
   const tmpl = UG.providers[name];
   if (!tmpl) return;
-  // Migrate: starý formát badges → layers
-  if (!tmpl.layers) {
-    tmpl.layers = (tmpl.badges||[]).map(bt => ({
-      id: bt, name: bt.toUpperCase(),
-      src: `/badges/shared/${bt}.png`,
-      type: 'badge',
-      ...(tmpl.layout?.[bt] || DEF_LAYOUT[bt] || {x:162,y:104,scale:1,opacity:1,rotation:0})
-    }));
-  }
+  if (!tmpl.layers) tmpl.layers = [];
   const channels = tmpl.channels || {};
   const channelRows = Object.entries(channels).map(([ch, logo], i) => `
     <div class="ug-channel-row" id="ugch-${i}">
@@ -4387,7 +4256,7 @@ function ugCanvasLoadLayer(layerDef) {
       img.src = `/api/logo/file?name=${encodeURIComponent(layerDef.src || layerDef.id + '.png')}`;
     }
   };
-  img.src = layerDef.src || `/badges/shared/${layerDef.id}.png`;
+  img.src = layerDef.src || '';
 }
 
 function ugCanvasDraw() {
@@ -4518,7 +4387,7 @@ function ugLayerListRender(name) {
       style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;cursor:pointer;
              border:1px solid ${UGC.selected===l.id?'var(--accent)':'var(--border)'};
              background:${UGC.selected===l.id?'var(--s3)':'var(--s2)'}">
-      <img src="${l.src||`/badges/shared/${l.id}.png`}" style="width:24px;height:24px;object-fit:contain;flex-shrink:0" onerror="this.style.opacity=.3">
+      <img src="${l.src||''}" style="width:24px;height:24px;object-fit:contain;flex-shrink:0" onerror="this.style.opacity=.3">
       <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name||l.id}</span>
       <label style="display:flex;align-items:center;gap:4px;cursor:pointer" onclick="event.stopPropagation()">
         <input type="checkbox" ${l.active?'checked':''} style="accent-color:var(--accent)"
@@ -4589,49 +4458,6 @@ function ugLayerRemove(name, id) {
   ugLayerListRender(name);
   ugLayerSelect(name, null);
   ugCanvasDraw();
-}
-
-function ugLayerAddBadge(name) {
-  const badges = ['dvbs2','dvbt2','iptv','radio','enc','hd','4k'];
-  const labels = {dvbs2:'DVB-S2',dvbt2:'DVB-T2',iptv:'IPTV',radio:'Radio',enc:'Encrypted',hd:'HD','4k':'4K'};
-  const tmpl = UG.providers[name];
-
-  // Vytvoř dialog
-  const existing = document.getElementById('ugBadgePickModal');
-  if (existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id = 'ugBadgePickModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
-  const box = document.createElement('div');
-  box.style.cssText = 'background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:20px;min-width:320px';
-  box.innerHTML = `
-    <div style="font-weight:700;font-size:14px;margin-bottom:12px">Přidat badge vrstvu</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
-      ${badges.map(bt => `
-        <button onclick="ugLayerAddBadgeConfirm('${name}','${bt}');document.getElementById('ugBadgePickModal').remove()"
-          style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px">
-          <img src="/badges/shared/${bt}.png" style="width:20px;height:20px;object-fit:contain" onerror="this.style.display='none'">
-          ${labels[bt]||bt}
-        </button>
-      `).join('')}
-    </div>
-    <button onclick="document.getElementById('ugBadgePickModal').remove()" style="background:var(--s2);border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:5px 12px;cursor:pointer;font-size:12px">Zrušit</button>
-  `;
-  modal.appendChild(box);
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target===modal) modal.remove(); });
-}
-
-function ugLayerAddBadgeConfirm(name, bt) {
-  const tmpl  = UG.providers[name];
-  if (!tmpl) return;
-  if (!tmpl.layers) tmpl.layers = [];
-  if (tmpl.layers.find(l => l.id === bt)) { toast(`Badge ${bt} již přidán`, 'err'); return; }
-  const def = DEF_LAYOUT[bt] || {x:162,y:104,scale:1,opacity:1,rotation:0};
-  const layer = { id: bt, name: bt.toUpperCase(), src: `/badges/shared/${bt}.png`, type:'badge', active:true, ...def };
-  tmpl.layers.push(layer);
-  ugCanvasLoadLayer(layer);
-  ugLayerListRender(name);
 }
 
 function ugLayerUploadPng(name) {
@@ -5059,25 +4885,11 @@ async function ugSave(provider) {
   if (!tmpl) return;
   const status = document.getElementById('ugSaveStatus');
   if (status) status.textContent = 'Ukládám…';
-  // Serializuj layers → badges + layout pro zpětnou kompatibilitu se serverem
-  const badges = (tmpl.layers||[]).filter(l=>l.active&&l.type==='badge').map(l=>l.id);
-  const layout = {};
-  (tmpl.layers||[]).forEach(l => {
-    layout[l.id] = {x:l.x??0,y:l.y??0,scale:l.scale??1,opacity:l.opacity??1,rotation:l.rotation??0};
-  });
-  // Ulož layers – base64 dataUrl nahraď prázdným řetězcem (server je má jako soubory)
-  const layersToSave = (tmpl.layers||[]).map(l => {
-    const saved = Object.assign({}, l);
-    // Neposlat velké base64 bloby pokud src je /api/logo/file nebo /badges – server je načte sám
-    if (saved.src && saved.src.startsWith('data:')) {
-      // Ponech dataUrl – server umí dekódovat base64
-    }
-    return saved;
-  });
+  const layersToSave = (tmpl.layers||[]).map(l => Object.assign({}, l));
   try {
     const r = await fetch('/api/logo_templates', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ provider, default_logo: tmpl.default_logo||'', badges, layout, channels: tmpl.channels||{}, layers: layersToSave })
+      body: JSON.stringify({ provider, default_logo: tmpl.default_logo||'', channels: tmpl.channels||{}, layers: layersToSave })
     });
     const d = await r.json();
     if (d.ok) {

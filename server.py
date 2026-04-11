@@ -2,7 +2,7 @@
 """
 Picon Generator Server v2.0
 ============================
-Bottle HTTP server - galerie zdroju, editor badges, push na GitHub.
+Bottle HTTP server - galerie zdrojů, editor vrstev, push na GitHub.
 
 Endpointy:
   GET  /picons/<nazev>         - Kodi/TVheadend kompatibilni
@@ -11,8 +11,6 @@ Endpointy:
   GET  /api/sources            - seznam GitHub zdroju
   GET  /api/gallery/<source>   - listing log z daneho GitHub zdroje
   GET  /api/logo               - stazeni PNG loga z URL (?url=...)
-  GET  /api/badges             - seznam dostupnych badge ikon
-  POST /api/editor/save        - ulozeni layout.json
   POST /api/publish            - push hotoveho piconu na vlastni GitHub
   GET  /health                 - health check
 """
@@ -43,7 +41,7 @@ from config    import load_config
 from cache     import PiconCache
 from resolver  import LogoResolver
 from normalize import normalize_picon_name, remap, sync_remap_from_sample
-from composer  import compose, BADGE_TYPES
+from composer  import compose
 from github    import list_logos, download_logo, push_logo, clear_listing_cache, set_disk_cache, get_prefetch_progress, startup_prefetch, get_startup_progress
 from chocholousek import DEFAULT_STYLES
 
@@ -90,11 +88,10 @@ def get_picon_bytes(picon_name):
     filename  = normalize_picon_name(remapped) + '.png'
     logo_data = resolver.resolve(filename)
 
-    svc_name      = detect_service(normalized)
-    svc_cfg       = cfg['services'].get(svc_name, {}) if svc_name else {}
-    active_badges = {bt: bool(svc_cfg.get('defaults', {}).get(bt, False)) for bt in BADGE_TYPES}
+    svc_name  = detect_service(normalized)
+    svc_cfg   = cfg['services'].get(svc_name, {}) if svc_name else {}
 
-    result = compose(logo_data, svc_cfg, active_badges, cfg)
+    result = compose(logo_data, svc_cfg, cfg)
     cache.set_memory(normalized, result)
     return result
 
@@ -674,47 +671,6 @@ def api_logo():
     return b''
 
 
-# ── /api/badges – seznam badge ikon ────────────────────────────────────────
-
-@app.route('/api/badges')
-def api_badges():
-    result      = {}
-    badges_root = cfg['sources']['badges_dir']
-    shared_dir  = os.path.join(badges_root, 'shared')
-    for bt in BADGE_TYPES:
-        result[bt] = {
-            'shared':   os.path.exists(os.path.join(shared_dir, f'{bt}.png')),
-            'services': {
-                svc: os.path.exists(os.path.join(scfg.get('badges_dir', ''), f'{bt}.png'))
-                for svc, scfg in cfg['services'].items()
-            }
-        }
-    return json_response(result)
-
-
-# ── /api/editor/save – ulozeni layout.json ────────────────────────────────────────
-
-@app.route('/api/editor/save', method='POST')
-def api_editor_save():
-    try:
-        data     = request.json or {}
-        svc_name = data.get('service')
-        layout   = data.get('layout')
-        if not svc_name or not layout:
-            return json_response({'error': 'Chybi service nebo layout'}, 400)
-        if svc_name not in cfg['services']:
-            return json_response({'error': f'Sluzba "{svc_name}" nenalezena'}, 404)
-        svc_dir = cfg['services'][svc_name].get('badges_dir', '')
-        os.makedirs(svc_dir, exist_ok=True)
-        layout_file = os.path.join(svc_dir, 'layout.json')
-        with open(layout_file, 'w', encoding='utf-8') as f:
-            json.dump(layout, f, ensure_ascii=False, indent=2)
-        cache._lru.clear()
-        return json_response({'ok': True})
-    except Exception as e:
-        return json_response({'error': str(e)}, 500)
-
-
 # ── /api/publish – push na vlastni GitHub ────────────────────────────────────────
 
 @app.route('/api/publish', method='POST')
@@ -998,11 +954,9 @@ def health():
 
 @app.route('/api/config')
 def api_config():
-    pass  # config endpoint
     return json_response({
         'picon': cfg['picon'],
         'services': list(cfg['services'].keys()),
-        'badge_defaults': cfg['badge_defaults'],
     })
 
 @app.route('/api/services/add', method='POST')
@@ -1015,13 +969,7 @@ def api_services_add():
         return json_response({'ok': False, 'error': 'Neplatny nazev (pouze pismena, cisla, pomlcky)'}, 400)
     if name in cfg.get('services', {}):
         return json_response({'ok': False, 'error': 'Poskytovatel jiz existuje'})
-    cfg.setdefault('services', {})[name] = {
-        'defaults': {},
-        'badges_dir': f'badges/{name}',
-        'name_patterns': []
-    }
-    import os
-    os.makedirs(os.path.join(SCRIPT_DIR, 'badges', name), exist_ok=True)
+    cfg.setdefault('services', {})[name] = {'name_patterns': []}
     _save_config()
     print(f'[services] Pridan poskytovatel: {name}')
     return json_response({'ok': True, 'name': name})
@@ -1151,26 +1099,12 @@ def logo_url(provider, quality, channel):
     # 2. service_cfg
     svc_cfg = cfg['services'].get(provider, {})
 
-    # 3. Aktivni badges: z templatu + quality badge
-    active_badges = {bt: False for bt in BADGE_TYPES}
-    for bt in tmpl.get('badges', []):
-        if bt in BADGE_TYPES:
-            active_badges[bt] = True
-    quality_badge = {'hd': 'hd', '4k': '4k'}.get(quality.lower())
-    if quality_badge and quality_badge in BADGE_TYPES:
-        active_badges[quality_badge] = True
-
-    # 4. Custom layout z templatu (pozice badges)
-    layout_override = tmpl.get('layout')
-    if layout_override:
-        svc_cfg = dict(svc_cfg)
-        svc_cfg['_layout_override'] = layout_override
-
     # 5. Extra vrstvy – z ?layers= parametru nebo vsechny aktivni ze sablony
     import urllib.parse as _ul
     layers_param = request.query.get('layers', '').strip()
     active_layer_ids = set(layers_param.split(',')) if layers_param else None
     tmpl_layers = tmpl.get('layers', [])
+
     extra_layers = []
     for layer in tmpl_layers:
         lid = layer.get('id', '')
@@ -1185,13 +1119,7 @@ def logo_url(provider, quality, channel):
         if '/api/logo/file?name=' in src:
             fname = _ul.unquote(src.split('name=', 1)[1])
             layer_data = _find_logo_file(fname)
-        elif src.startswith('/badges/'):
-            badge_path = os.path.join(os.path.dirname(__file__), src.lstrip('/'))
-            if os.path.exists(badge_path):
-                with open(badge_path, 'rb') as bf:
-                    layer_data = bf.read()
         elif src.startswith('data:image/'):
-            # base64 dataUrl – dekóduj přímo
             import base64 as _b64
             try:
                 header, b64data = src.split(',', 1)
@@ -1199,7 +1127,6 @@ def logo_url(provider, quality, channel):
             except Exception:
                 pass
         elif src and not src.startswith('/') and not src.startswith('http'):
-            # jen jméno souboru
             layer_data = _find_logo_file(src if src.lower().endswith('.png') else src + '.png')
         if layer_data:
             extra_layers.append({
@@ -1212,7 +1139,7 @@ def logo_url(provider, quality, channel):
             })
 
     try:
-        result = compose(logo_data, svc_cfg, active_badges, cfg, extra_layers=extra_layers)
+        result = compose(logo_data, svc_cfg, cfg, extra_layers=extra_layers)
         response.content_type = 'image/png'
         response.set_header('Cache-Control', 'no-cache')
         return result
@@ -1241,8 +1168,6 @@ def api_logo_templates_save():
     templates = _load_logo_templates()
     templates[provider] = {
         'default_logo': data.get('default_logo', ''),
-        'badges':       data.get('badges', []),
-        'layout':       data.get('layout', {}),
         'channels':     data.get('channels', {}),
         'layers':       data.get('layers', []),
     }
